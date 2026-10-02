@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Del sensor al microcontrolador | Circuitos eléctricos y microcontroladores UMNG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --placa:#0F3D2E; --fondo:#0A2C21; --pista:#1C5A45; --cobre:#D8A24A; --seda:#F2F0E6; --tenue:#A9C4B8;
+  --senal:#7FD6C2; --alerta:#FF8A5B;
+  --titulo:"Chakra Petch","Trebuchet MS",sans-serif;
+  --texto:"IBM Plex Sans","Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--placa)}
+body{margin:0;background:var(--placa);color:var(--seda);font-family:var(--texto);font-size:17px;line-height:1.55}
+.marco{max-width:1120px;margin:0 auto;padding:0 20px}
+
+header{padding:52px 0 30px}
+header .origen{margin:0 0 14px;color:var(--tenue);font-size:.95rem}
+h1{font-family:var(--titulo);font-weight:700;font-size:clamp(2.2rem,6vw,4.2rem);line-height:1;margin:0;max-width:16ch;letter-spacing:-.01em}
+header .entrada{max-width:62ch;margin:20px 0 30px;font-size:1.08rem}
+.cadena{display:flex;flex-wrap:wrap;align-items:center;gap:0;list-style:none;margin:0;padding:0;font-family:var(--titulo);font-weight:500;font-size:.95rem}
+.cadena li{display:flex;align-items:center}
+.cadena li span{border:2px solid var(--cobre);border-radius:999px;padding:5px 14px;background:var(--fondo);white-space:nowrap}
+.cadena li + li::before{content:"";width:26px;height:3px;background:var(--cobre)}
+@media (max-width:700px){.cadena{gap:8px 0}}
+
+nav{position:sticky;top:0;z-index:5;background:var(--fondo);border-top:3px solid var(--cobre);border-bottom:1px solid var(--pista)}
+.pestanas{display:flex;gap:2px;overflow-x:auto}
+.pestanas button{font:500 1rem var(--titulo);color:var(--seda);background:none;border:0;padding:12px 16px;cursor:pointer;white-space:nowrap;text-align:left;border-bottom:4px solid transparent}
+.pestanas button small{display:block;color:var(--tenue);font:400 .78rem var(--texto)}
+.pestanas button[aria-selected="true"]{border-bottom-color:var(--cobre);background:var(--placa)}
+.pestanas button:hover{background:var(--pista)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--senal);outline-offset:2px}
+
+main{padding:34px 0 70px}
+h2{font-family:var(--titulo);font-weight:700;font-size:clamp(1.5rem,3.2vw,2.1rem);line-height:1.1;margin:0 0 10px}
+h3{font-family:var(--titulo);font-weight:500;font-size:1.05rem;margin:0 0 10px;color:var(--cobre)}
+.intro{max-width:68ch;margin:0 0 26px}
+.banco{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:820px){.banco{grid-template-columns:1fr}}
+
+.controles{background:var(--seda);color:#12261E;padding:20px;border-radius:6px}
+.controles h3{color:#12261E}
+.campo{margin-bottom:15px}
+.campo label{display:flex;justify-content:space-between;gap:8px;font-size:.93rem;margin-bottom:5px}
+.campo output{font-weight:600;font-family:var(--mono);font-size:.9rem;white-space:nowrap}
+.campo input[type=text],.campo select{width:100%;font:inherit;padding:8px 10px;border:1.5px solid #12261E;border-radius:4px;background:#fff;color:#12261E}
+.campo input[type=range]{width:100%;accent-color:#0F3D2E}
+.boton{font:600 .98rem var(--texto);border:0;border-radius:4px;padding:10px 14px;cursor:pointer;background:#0F3D2E;color:var(--seda)}
+.boton:hover{background:#17553F}
+.nota-ctrl{font-size:.87rem;margin:12px 0 0;color:#3D5248}
+
+.salida > * + *{margin-top:20px}
+.panel{background:var(--fondo);border:1px solid var(--pista);border-radius:6px;padding:18px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:640px){.dos{grid-template-columns:1fr}}
+canvas{display:block;width:100%;height:240px;border-radius:4px}
+.pie{font-size:.88rem;color:var(--tenue);margin:8px 0 0}
+.leyenda{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem;margin-bottom:8px}
+.leyenda i{display:inline-block;width:22px;height:4px;vertical-align:middle;margin-right:6px;border-radius:2px}
+
+.cifras{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0 18px}
+.cifras div{padding:10px 0;border-top:1px solid var(--pista)}
+.cifras b{display:block;font-family:var(--titulo);font-size:1.45rem;font-weight:700;line-height:1.15}
+.cifras small{color:var(--tenue);font-size:.86rem}
+.estado{margin:14px 0 0;padding:9px 12px;border-radius:4px;font-size:.95rem;border-left:5px solid var(--senal);background:var(--placa)}
+.estado.mal{border-left-color:var(--alerta)}
+pre{margin:0;font-family:var(--mono);font-size:.84rem;line-height:1.5;overflow-x:auto;color:var(--seda);white-space:pre}
+pre .c{color:var(--tenue)}
+svg text{font-family:var(--texto)}
+
+.barra{height:16px;background:var(--placa);border:1px solid var(--pista);border-radius:999px;overflow:hidden}
+.barra i{display:block;height:100%;background:var(--cobre)}
+.terminal{font-family:var(--mono);background:#061A13;border:1px solid var(--pista);border-radius:4px;padding:12px;min-height:58px;font-size:1.05rem;word-break:break-all}
+.terminal:empty::before{content:"Aquí aparece lo que recibe el otro dispositivo.";color:var(--tenue);font-family:var(--texto);font-size:.9rem}
+
+.tablero{display:flex;flex-wrap:wrap;gap:22px;align-items:center}
+.led{width:34px;height:34px;border-radius:50%;border:3px solid var(--tenue);background:#12261E;transition:none}
+.led.on.verde{background:#6CF2A0;border-color:#C8FFDD;box-shadow:0 0 18px #6CF2A0}
+.led.on.ambar{background:#FFC24A;border-color:#FFE7B0;box-shadow:0 0 18px #FFC24A}
+.pieza{text-align:center;font-size:.86rem;color:var(--tenue)}
+.pieza .led{margin:0 auto 6px}
+.pulsador{width:92px;height:92px;border-radius:50%;border:5px solid #12261E;background:var(--cobre);color:#12261E;font:700 .9rem var(--titulo);cursor:pointer;box-shadow:0 5px 0 #7A5A22;touch-action:manipulation;user-select:none}
+.pulsador.abajo{transform:translateY(4px);box-shadow:0 1px 0 #7A5A22}
+.opciones{display:grid;gap:8px}
+.opciones label{display:flex;gap:8px;align-items:flex-start;font-size:.95rem;cursor:pointer}
+.opciones input{margin-top:5px;accent-color:#0F3D2E}
+footer{border-top:1px solid var(--pista);padding:22px 0 40px;color:var(--tenue);font-size:.9rem}
+</style>
+</head>
+<body>
+
+<header class="marco">
+  <p class="origen">Universidad Militar Nueva Granada, Ingeniería Informática, quinto semestre</p>
+  <h1>Del sensor al microcontrolador</h1>
+  <p class="entrada">Antes de ser información, un dato es un voltaje. Estos cuatro bancos de prueba siguen el camino completo de una señal: se amplifica, se convierte en número, viaja por un cable y despierta al procesador cuando hace falta.</p>
+  <ol class="cadena" aria-label="Cadena de adquisición de datos">
+    <li><span>Variable física</span></li><li><span>Sensor</span></li><li><span>Amplificador</span></li><li><span>ADC</span></li><li><span>Microcontrolador</span></li><li><span>UART</span></li>
+  </ol>
+</header>
+
+<nav>
+  <div class="marco pestanas" role="tablist" aria-label="Bancos de prueba">
+    <button role="tab" aria-selected="true" data-tab="opamp">Amplificador operacional<small>Semanas 2 a 4</small></button>
+    <button role="tab" aria-selected="false" data-tab="adc">Sensor y conversor ADC<small>Semana 8</small></button>
+    <button role="tab" aria-selected="false" data-tab="uart">Comunicación UART<small>Semana 7</small></button>
+    <button role="tab" aria-selected="false" data-tab="irq">Interrupciones<small>Semana 9</small></button>
+  </div>
+</nav>
+
+<main class="marco">
+
+<!-- ============ OPAMP ============ -->
+<section id="opamp" role="tabpanel">
+  <h2>Amplificar sin deformar</h2>
+  <p class="intro">La señal de un sensor suele ser demasiado pequeña. Dos resistencias alrededor de un amplificador operacional fijan cuánto crece. Súbele a la ganancia hasta que la salida choque con la fuente de alimentación y verás por qué el diseño importa.</p>
+  <div class="banco">
+    <div class="controles">
+      <h3>Circuito</h3>
+      <div class="campo">
+        <label for="cfg">Configuración</label>
+        <select id="cfg">
+          <option value="inv">Inversor</option>
+          <option value="noinv">No inversor</option>
+          <option value="seg">Seguidor de voltaje</option>
+        </select>
+      </div>
+      <div class="campo" id="campoR1"><label for="r1">Resistencia R1 <output id="r1Out"></output></label><input id="r1" type="range" min="1" max="100" step="1" value="10"></div>
+      <div class="campo" id="campoRf"><label for="rf">Resistencia de realimentación Rf <output id="rfOut"></output></label><input id="rf" type="range" min="1" max="470" step="1" value="47"></div>
+      <div class="campo"><label for="amp">Amplitud de la entrada <output id="ampOut"></output></label><input id="amp" type="range" min="0.05" max="5" step="0.05" value="1"></div>
+      <div class="campo"><label for="vcc">Alimentación simétrica <output id="vccOut"></output></label><input id="vcc" type="range" min="5" max="15" step="1" value="12"></div>
+      <p class="nota-ctrl">Se asume que la salida satura unos 1,5 V antes de llegar a la alimentación, como en un amplificador de propósito general.</p>
+    </div>
+    <div class="salida">
+      <div class="dos">
+        <div class="panel">
+          <h3>Esquema</h3>
+          <div id="esquema"></div>
+        </div>
+        <div class="panel">
+          <h3>Resultado</h3>
+          <div class="cifras" id="cifrasOp"></div>
+          <p class="estado" id="estadoOp"></p>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="leyenda"><span><i style="background:var(--senal)"></i>Entrada</span><span><i style="background:var(--cobre)"></i>Salida</span><span><i style="background:var(--alerta)"></i>Límite de saturación</span></div>
+        <canvas id="cvOsc" role="img" aria-label="Osciloscopio con la señal de entrada y la de salida"></canvas>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ADC ============ -->
+<section id="adc" role="tabpanel" hidden>
+  <h2>De grados Celsius a un número entero</h2>
+  <p class="intro">Un sensor de temperatura entrega 10 mV por cada grado. El amplificador acomoda ese voltaje al rango del conversor y el ADC lo parte en escalones. Ajusta la ganancia y los bits para medir con la mayor precisión posible sin saturar.</p>
+  <div class="banco">
+    <div class="controles">
+      <h3>Cadena de medición</h3>
+      <div class="campo"><label for="temp">Temperatura real <output id="tempOut"></output></label><input id="temp" type="range" min="0" max="100" step="0.1" value="27.3"></div>
+      <div class="campo"><label for="gan">Ganancia del acondicionador <output id="ganOut"></output></label><input id="gan" type="range" min="1" max="5" step="0.1" value="1"></div>
+      <div class="campo"><label for="vref">Voltaje de referencia del ADC</label>
+        <select id="vref"><option value="5">5 V</option><option value="3.3">3,3 V</option></select></div>
+      <div class="campo"><label for="bits">Resolución del ADC</label>
+        <select id="bits"><option value="8">8 bits (256 niveles)</option><option value="10" selected>10 bits (1.024 niveles)</option><option value="12">12 bits (4.096 niveles)</option></select></div>
+      <p class="nota-ctrl">Reto: mide de 0 a 100 °C con error menor que 0,1 °C.</p>
+    </div>
+    <div class="salida">
+      <div class="panel">
+        <h3>Lo que ocurre en cada etapa</h3>
+        <div class="cifras" id="cifrasAdc"></div>
+        <p style="margin:14px 0 6px;font-size:.92rem" id="usoTxt"></p>
+        <div class="barra"><i id="usoBarra"></i></div>
+        <p class="estado" id="estadoAdc"></p>
+      </div>
+      <div class="dos">
+        <div class="panel">
+          <h3>Escalones del conversor, vistos de cerca</h3>
+          <canvas id="cvAdc" style="height:220px" role="img" aria-label="Escalera de cuantización alrededor del voltaje actual"></canvas>
+          <p class="pie">Todo voltaje dentro de un mismo escalón produce el mismo número.</p>
+        </div>
+        <div class="panel">
+          <h3>El programa que recupera la temperatura</h3>
+          <pre id="codAdc"></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ UART ============ -->
+<section id="uart" role="tabpanel" hidden>
+  <h2>Un carácter convertido en pulsos</h2>
+  <p class="intro">Para hablar con otro microcontrolador o con el computador basta un cable de datos. Cada carácter viaja bit por bit, envuelto entre un bit de inicio y uno de parada. Escribe un texto y míralo salir por la línea.</p>
+  <div class="banco">
+    <div class="controles">
+      <h3>Transmisor</h3>
+      <div class="campo"><label for="txt">Texto por enviar (hasta 12 caracteres)</label><input id="txt" type="text" maxlength="12" value="Hola" autocomplete="off"></div>
+      <div class="campo"><label for="baud">Velocidad</label>
+        <select id="baud"><option>9600</option><option>19200</option><option>57600</option><option>115200</option></select></div>
+      <div class="campo"><label for="par">Paridad</label>
+        <select id="par"><option value="n">Sin paridad</option><option value="e">Par</option><option value="o">Impar</option></select></div>
+      <div class="campo"><label for="stop">Bits de parada</label>
+        <select id="stop"><option value="1">1</option><option value="2">2</option></select></div>
+      <button class="boton" id="btnTx">Transmitir</button>
+      <p class="nota-ctrl">La animación va en cámara lenta: a 9.600 baudios un carácter real tarda cerca de un milisegundo.</p>
+    </div>
+    <div class="salida">
+      <div class="panel">
+        <h3 id="tituloTrama">Trama del carácter</h3>
+        <canvas id="cvUart" style="height:210px" role="img" aria-label="Forma de onda de la trama UART"></canvas>
+        <p class="pie">El bit menos significativo (D0) sale primero. La línea descansa en nivel alto.</p>
+      </div>
+      <div class="panel">
+        <div class="cifras" id="cifrasUart"></div>
+      </div>
+      <div class="panel">
+        <h3>Receptor</h3>
+        <div class="terminal" id="terminal" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INTERRUPCIONES ============ -->
+<section id="irq" role="tabpanel" hidden>
+  <h2>Atender un evento sin dejar de trabajar</h2>
+  <p class="intro">El programa principal hace parpadear un LED con pausas de medio segundo. ¿Cómo se entera de que alguien oprimió un pulsador? Prueba las dos estrategias con toques cortos y compara cuántos se pierden.</p>
+  <div class="banco">
+    <div class="controles">
+      <h3>Estrategia</h3>
+      <div class="opciones" role="radiogroup" aria-label="Estrategia de lectura del pulsador">
+        <label><input type="radio" name="modo" value="irq" checked><span><b>Interrupción externa.</b> El pulsador avisa al procesador en el instante en que cambia.</span></label>
+        <label><input type="radio" name="modo" value="poll"><span><b>Sondeo.</b> El programa revisa el pulsador una vez por vuelta, entre pausa y pausa.</span></label>
+      </div>
+      <div style="text-align:center;margin:22px 0 6px">
+        <button class="pulsador" id="pulsador" aria-label="Pulsador conectado al microcontrolador">Pulsar</button>
+      </div>
+      <p class="nota-ctrl">Da toques cortos o mantén oprimido. También funciona con la barra espaciadora.</p>
+    </div>
+    <div class="salida">
+      <div class="panel">
+        <div class="tablero">
+          <div class="pieza"><div class="led verde" id="led1"></div>LED del programa principal</div>
+          <div class="pieza"><div class="led ambar" id="led2"></div>LED que cambia con el pulsador</div>
+          <div class="cifras" style="flex:1;min-width:240px" id="cifrasIrq"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Línea de tiempo de los últimos 8 segundos</h3>
+        <canvas id="cvIrq" style="height:210px" role="img" aria-label="Línea de tiempo del pulsador, el programa principal y la atención del evento"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Así se escribe</h3>
+        <pre id="codIrq"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="marco">Material de apoyo para la asignatura Circuitos eléctricos y microcontroladores. Los modelos son ideales y simplifican los componentes reales.</footer>
+
+<script>
+(function(){
+"use strict";
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COL = {fondo:'#061A13',pista:css('--pista'),cobre:css('--cobre'),seda:css('--seda'),tenue:css('--tenue'),senal:css('--senal'),alerta:css('--alerta')};
+const fmt = (x,d=2) => Number.isFinite(x) ? x.toLocaleString('es-CO',{minimumFractionDigits:d,maximumFractionDigits:d}) : '—';
+
+function lienzo(cv){
+  const r = cv.getBoundingClientRect(), d = window.devicePixelRatio||1;
+  const w = Math.max(120,r.width), h = Math.max(80,r.height);
+  cv.width = Math.round(w*d); cv.height = Math.round(h*d);
+  const g = cv.getContext('2d'); g.setTransform(d,0,0,d,0,0);
+  g.fillStyle = COL.fondo; g.fillRect(0,0,w,h);
+  g.font = '12px "IBM Plex Sans","Segoe UI",sans-serif';
+  return {g,w,h};
+}
+
+/* ---------- Pestañas ---------- */
+let activa = 'opamp';
+const tabs = document.querySelectorAll('[role=tab]');
+tabs.forEach(b => b.addEventListener('click', () => {
+  activa = b.dataset.tab;
+  tabs.forEach(t => t.setAttribute('aria-selected', String(t===b)));
+  document.querySelectorAll('[role=tabpanel]').forEach(p => p.hidden = p.id!==activa);
+  redibujar();
+  if(activa==='irq') arrancarIrq();
+}));
+function redibujar(){
+  if(activa==='opamp') opamp();
+  if(activa==='adc') adc();
+  if(activa==='uart') pintarUart();
+  if(activa==='irq') pintarIrq(performance.now());
+}
+window.addEventListener('resize', redibujar);
+
+/* ============ OPAMP ============ */
+function esquema(tipo, r1, rf){
+  const S = 'stroke="#F2F0E6" stroke-width="2" fill="none"', C = 'stroke="#D8A24A" stroke-width="2" fill="#0A2C21"';
+  const T = (x,y,t,a='middle',col='#F2F0E6') => `<text x="${x}" y="${y}" text-anchor="${a}" font-size="12" fill="${col}">${t}</text>`;
+  const tierra = (x,y) => `<path d="M${x-10} ${y}h20M${x-6} ${y+5}h12M${x-2} ${y+10}h4" ${S}/>`;
+  let s = `<svg viewBox="0 0 340 175" style="width:100%;height:auto" role="img" aria-label="Esquema del amplificador ${tipo==='inv'?'inversor':tipo==='noinv'?'no inversor':'seguidor'}">`;
+  s += `<path d="M160 40V140L250 90Z" ${C}/>` + T(172,70,'−','middle') + T(172,120,'+','middle');
+  s += `<path d="M250 90H310" ${S}/>` + T(312,80,'Vout','end','#D8A24A');
+  if(tipo==='inv'){
+    s += `<path d="M20 65H60M110 65H160M140 65V20H175M225 20H280V90M160 115H140V150" ${S}/>`;
+    s += `<rect x="60" y="57" width="50" height="16" ${C}/><rect x="175" y="12" width="50" height="16" ${C}/>`;
+    s += tierra(140,150) + T(20,56,'Vin','start','#7FD6C2') + T(85,92,`R1 ${r1} kΩ`) + T(200,46,`Rf ${rf} kΩ`);
+  } else if(tipo==='noinv'){
+    s += `<path d="M20 115H160M40 65H60M110 65H160M40 65V100M140 65V20H175M225 20H280V90" ${S}/>`;
+    s += `<rect x="60" y="57" width="50" height="16" ${C}/><rect x="175" y="12" width="50" height="16" ${C}/>`;
+    s += tierra(40,100) + T(20,132,'Vin','start','#7FD6C2') + T(85,50,`R1 ${r1} kΩ`) + T(200,46,`Rf ${rf} kΩ`);
+  } else {
+    s += `<path d="M20 115H160M160 65H140V20H280V90" ${S}/>` + T(20,132,'Vin','start','#7FD6C2') + T(210,14,'realimentación directa');
+  }
+  s += `<circle cx="280" cy="90" r="3" fill="#F2F0E6"/></svg>`;
+  return s;
+}
+function opamp(){
+  const tipo=$('cfg').value, r1=Number($('r1').value), rf=Number($('rf').value), A=Number($('amp').value), vcc=Number($('vcc').value);
+  $('r1Out').textContent = r1+' kΩ'; $('rfOut').textContent = rf+' kΩ'; $('ampOut').textContent = fmt(A,2)+' V'; $('vccOut').textContent = '±'+vcc+' V';
+  $('campoR1').hidden = $('campoRf').hidden = tipo==='seg';
+  const G = tipo==='inv' ? -rf/r1 : tipo==='noinv' ? 1+rf/r1 : 1;
+  const vsat = vcc-1.5, ideal = Math.abs(G)*A, real = Math.min(ideal,vsat), sat = ideal>vsat;
+  $('esquema').innerHTML = esquema(tipo,r1,rf);
+  const formula = tipo==='inv' ? 'G = −Rf / R1' : tipo==='noinv' ? 'G = 1 + Rf / R1' : 'G = 1';
+  $('cifrasOp').innerHTML =
+    `<div><b>${fmt(G,2)}</b><small>Ganancia (${formula})</small></div>`+
+    `<div><b>${fmt(real,2)} V</b><small>Pico de salida${sat?' recortado':''}</small></div>`;
+  const e = $('estadoOp'); e.classList.toggle('mal',sat);
+  e.textContent = sat
+    ? `Saturación: la salida ideal sería de ${fmt(ideal,1)} V pero el amplificador solo llega a ${fmt(vsat,1)} V. La señal sale recortada; baja la ganancia o la entrada.`
+    : (tipo==='inv' ? 'Zona lineal: la salida es una copia amplificada e invertida de la entrada.'
+      : tipo==='noinv' ? 'Zona lineal: la salida es una copia amplificada y en fase con la entrada.'
+      : 'El seguidor no amplifica: aísla al sensor para que la etapa siguiente no lo cargue.');
+  const {g,w,h} = lienzo($('cvOsc'));
+  g.strokeStyle = COL.pista; g.lineWidth = 1;
+  for(let i=1;i<10;i++){ g.beginPath(); g.moveTo(w*i/10,0); g.lineTo(w*i/10,h); g.stroke(); }
+  for(let i=1;i<8;i++){ g.beginPath(); g.moveTo(0,h*i/8); g.lineTo(w,h*i/8); g.stroke(); }
+  const Y = v => h/2 - v/vcc*(h/2-6);
+  g.strokeStyle = COL.alerta; g.setLineDash([5,5]);
+  [vsat,-vsat].forEach(v => { g.beginPath(); g.moveTo(0,Y(v)); g.lineTo(w,Y(v)); g.stroke(); });
+  g.setLineDash([]);
+  const traza = (f,col) => { g.beginPath(); for(let x=0;x<=w;x+=2){ const y=Y(f(Math.sin(x/w*4*Math.PI))); x?g.lineTo(x,y):g.moveTo(x,y); } g.strokeStyle=col; g.lineWidth=2.5; g.stroke(); };
+  traza(s => Math.max(-vcc,Math.min(vcc,A*s)), COL.senal);
+  traza(s => Math.max(-vsat,Math.min(vsat,G*A*s)), COL.cobre);
+  g.fillStyle = COL.tenue; g.textAlign='left'; g.fillText(`+${vcc} V`,6,14); g.fillText(`−${vcc} V`,6,h-6); g.fillText('0 V',6,h/2-4);
+}
+['cfg','r1','rf','amp','vcc'].forEach(id => $(id).addEventListener('input', opamp));
+
+/* ============ ADC ============ */
+function adc(){
+  const T=Number($('temp').value), G=Number($('gan').value), vref=Number($('vref').value), bits=Number($('bits').value);
+  $('tempOut').textContent = fmt(T,1)+' °C'; $('ganOut').textContent = '× '+fmt(G,1);
+  const niveles = 2**bits, vs = T*0.010, va = vs*G, sat = va>vref;
+  const cod = Math.min(niveles-1, Math.floor(va/vref*niveles));
+  const lsb = vref/niveles, vrec = cod*lsb, trec = vrec/(G*0.010), paso = lsb/(G*0.010);
+  const vMax = 1.0*G; // voltaje a 100 °C
+  $('cifrasAdc').innerHTML =
+    `<div><b>${fmt(vs*1000,0)} mV</b><small>Salida del sensor</small></div>`+
+    `<div><b>${fmt(va,3)} V</b><small>Después del amplificador</small></div>`+
+    `<div><b>${cod}</b><small>Código del ADC: ${cod.toString(2).padStart(bits,'0')} en binario, 0x${cod.toString(16).toUpperCase()} en hexadecimal</small></div>`+
+    `<div><b>${fmt(trec,2)} °C</b><small>Temperatura que calcula el programa (error de ${fmt(Math.abs(trec-T),2)} °C)</small></div>`+
+    `<div><b>${fmt(paso,3)} °C</b><small>Cambio mínimo que se puede distinguir</small></div>`;
+  const uso = Math.min(100, va/vref*100);
+  $('usoTxt').textContent = `La señal ocupa el ${fmt(uso,0)} % del rango del conversor.`;
+  $('usoBarra').style.width = uso+'%';
+  $('usoBarra').style.background = sat ? COL.alerta : COL.cobre;
+  const e = $('estadoAdc'); e.classList.toggle('mal', sat || vMax>vref);
+  e.textContent = sat ? `El voltaje supera la referencia de ${fmt(vref,1)} V: el ADC queda pegado en su valor máximo y la lectura es falsa. Reduce la ganancia.`
+    : vMax>vref ? `Con esta ganancia, a 100 °C el amplificador entregaría ${fmt(vMax,1)} V y saturaría el ADC. Sirve para esta temperatura, pero no para todo el rango.`
+    : paso<=0.1 ? `Buen diseño: cubre de 0 a 100 °C sin saturar y distingue cambios de ${fmt(paso,3)} °C.`
+    : `Funciona, pero cada escalón equivale a ${fmt(paso,2)} °C. Sube la ganancia o los bits para aprovechar mejor el rango.`;
+  $('codAdc').innerHTML =
+`<span class="c">// ADC de ${bits} bits, referencia de ${fmt(vref,1)} V</span>
+uint16_t lectura = leerADC();   <span class="c">// ${cod}</span>
+
+float voltaje = lectura * ${vref.toFixed(1)} / ${niveles}.0;
+<span class="c">// ${vrec.toFixed(4)} V</span>
+
+float temperatura = voltaje / (${G.toFixed(1)} * 0.010);
+<span class="c">// ${trec.toFixed(2)} °C</span>`;
+  // Escalera
+  const {g,w,h} = lienzo($('cvAdc'));
+  const c0 = Math.max(0, Math.min(niveles-8, cod-3)), iz=46, ab=26, ar=10, n=8;
+  const X = v => iz + (v/lsb - c0)/n*(w-iz-8), Y = c => h-ab-(c-c0+0.5)/n*(h-ab-ar);
+  g.strokeStyle = COL.pista; g.fillStyle = COL.tenue; g.textAlign='right';
+  for(let k=0;k<n;k++){ g.beginPath(); g.moveTo(iz,Y(c0+k)); g.lineTo(w-8,Y(c0+k)); g.stroke(); g.fillText(c0+k, iz-6, Y(c0+k)+4); }
+  g.beginPath();
+  for(let k=0;k<n;k++){ const x1=X((c0+k)*lsb), x2=X((c0+k+1)*lsb), y=Y(c0+k); k?g.lineTo(x1,y):g.moveTo(x1,y); g.lineTo(x2,y); }
+  g.strokeStyle = COL.cobre; g.lineWidth = 3; g.stroke();
+  const vx = Math.min(va, (c0+n)*lsb);
+  g.strokeStyle = COL.senal; g.lineWidth = 1.5; g.setLineDash([4,4]); g.beginPath(); g.moveTo(X(vx),ar); g.lineTo(X(vx),h-ab); g.stroke(); g.setLineDash([]);
+  g.fillStyle = COL.senal; g.beginPath(); g.arc(X(vx),Y(cod),6,0,6.3); g.fill();
+  g.fillStyle = COL.tenue; g.textAlign='left'; g.fillText(`${fmt(c0*lsb,3)} V`, iz, h-8);
+  g.textAlign='right'; g.fillText(`${fmt((c0+n)*lsb,3)} V`, w-8, h-8);
+  g.textAlign='center'; g.fillText(`escalón de ${fmt(lsb*1000,2)} mV`, (iz+w)/2, h-8);
+}
+['temp','gan','vref','bits'].forEach(id => $(id).addEventListener('input', adc));
+
+/* ============ UART ============ */
+const U = {idx:0, prog:1, animando:false, t0:0};
+const textoTx = () => ($('txt').value || 'A');
+function trama(ch){
+  const cod = ch.charCodeAt(0) > 255 ? 63 : ch.charCodeAt(0);
+  const bits=[{v:0,n:'Inicio'}]; let unos=0;
+  for(let i=0;i<8;i++){ const b=(cod>>i)&1; unos+=b; bits.push({v:b,n:'D'+i}); }
+  const p = $('par').value;
+  if(p!=='n') bits.push({v: p==='e' ? unos%2 : 1-unos%2, n:'Paridad'});
+  for(let i=0;i<Number($('stop').value);i++) bits.push({v:1,n:'Parada'});
+  return {cod,bits};
+}
+function pintarUart(){
+  const txt = textoTx(), ch = txt[Math.min(U.idx, txt.length-1)], {cod,bits} = trama(ch), baud = Number($('baud').value);
+  $('tituloTrama').textContent = `Trama del carácter «${ch}» (código ${cod}, ${cod.toString(2).padStart(8,'0')} en binario)`;
+  const tb = 1e6/baud;
+  $('cifrasUart').innerHTML =
+    `<div><b>${fmt(tb,1)} µs</b><small>Duración de cada bit</small></div>`+
+    `<div><b>${bits.length} bits</b><small>Por carácter, de los cuales 8 son datos</small></div>`+
+    `<div><b>${fmt(tb*bits.length/1000,2)} ms</b><small>Duración de la trama</small></div>`+
+    `<div><b>${Math.floor(baud/bits.length).toLocaleString('es-CO')}</b><small>Caracteres por segundo como máximo</small></div>`;
+  const {g,w,h} = lienzo($('cvUart'));
+  const tot = bits.length+2, an = w/tot, yH = 46, yL = h-70;
+  const niv = [1, ...bits.map(b=>b.v), 1];
+  bits.forEach((b,i) => {
+    const x=(i+1)*an;
+    g.fillStyle = b.n==='Inicio'||b.n==='Parada' ? 'rgba(216,162,74,.16)' : b.n==='Paridad' ? 'rgba(255,138,91,.16)' : 'rgba(127,214,194,.10)';
+    g.fillRect(x,20,an,h-64);
+    g.strokeStyle = COL.pista; g.lineWidth=1; g.strokeRect(x,20,an,h-64);
+    g.fillStyle = COL.seda; g.textAlign='center'; g.font='600 15px "IBM Plex Mono",monospace'; g.fillText(b.v, x+an/2, h-50);
+    g.font='11px "IBM Plex Sans",sans-serif'; g.fillStyle=COL.tenue;
+    g.save(); g.translate(x+an/2, h-8); if(an<44){ g.rotate(-Math.PI/4); g.textAlign='left'; g.translate(-6,-6);} g.fillText(b.n,0,0); g.restore();
+  });
+  g.beginPath();
+  niv.forEach((v,i) => { const y=v?yH:yL; if(i===0) g.moveTo(0,y); else g.lineTo(i*an,y); g.lineTo((i+1)*an,y); });
+  g.strokeStyle = COL.cobre; g.lineWidth = 3; g.lineJoin='round'; g.stroke();
+  if(U.animando){
+    const x = U.prog*w;
+    g.fillStyle='rgba(6,26,19,.72)'; g.fillRect(x,0,w-x,h);
+    g.strokeStyle=COL.senal; g.lineWidth=2; g.beginPath(); g.moveTo(x,0); g.lineTo(x,h); g.stroke();
+  }
+}
+function animarUart(ts){
+  if(!U.animando) return;
+  if(!U.t0) U.t0 = ts;
+  U.prog = Math.min(1,(ts-U.t0)/1500);
+  if(activa==='uart') pintarUart();
+  if(U.prog>=1){
+    const txt = textoTx();
+    $('terminal').textContent += txt[U.idx];
+    if(U.idx < txt.length-1){ U.idx++; U.t0 = 0; }
+    else { U.animando=false; $('btnTx').disabled=false; $('btnTx').textContent='Transmitir'; pintarUart(); return; }
+  }
+  requestAnimationFrame(animarUart);
+}
+$('btnTx').addEventListener('click', () => {
+  U.idx=0; U.prog=0; U.t0=0; U.animando=true; $('terminal').textContent='';
+  $('btnTx').disabled=true; $('btnTx').textContent='Transmitiendo';
+  requestAnimationFrame(animarUart);
+});
+['txt','baud','par','stop'].forEach(id => $(id).addEventListener('input', () => { if(!U.animando){ U.idx=0; pintarUart(); } }));
+
+/* ============ INTERRUPCIONES ============ */
+const I = {modo:'irq', oprimido:false, pulsos:[], isr:[], sondeos:[], reales:0, detectadas:0, led2:false, ultimaVuelta:0, activo:false, t0:performance.now()};
+const VENT = 8000, DUR_ISR = 150;
+const COD = {
+irq:`<span class="c">// La rutina se ejecuta sola cuando el pulsador cambia</span>
+void rutinaPulsador() {
+  ledAmbar = !ledAmbar;
+}
+
+void setup() {
+  attachInterrupt(PIN_PULSADOR, rutinaPulsador, FALLING);
+}
+
+void loop() {            <span class="c">// el programa principal no se entera</span>
+  digitalWrite(LED_VERDE, HIGH);  delay(500);
+  digitalWrite(LED_VERDE, LOW);   delay(500);
+}`,
+poll:`void loop() {
+  <span class="c">// Solo se mira el pulsador aquí, una vez por segundo</span>
+  if (digitalRead(PIN_PULSADOR) == LOW) {
+    ledAmbar = !ledAmbar;
+  }
+  digitalWrite(LED_VERDE, HIGH);  delay(500);   <span class="c">// procesador ocupado</span>
+  digitalWrite(LED_VERDE, LOW);   delay(500);   <span class="c">// procesador ocupado</span>
+}`};
+const ahora = () => performance.now() - I.t0;
+function detectar(t){ I.detectadas++; I.led2=!I.led2; $('led2').classList.toggle('on',I.led2); }
+function oprimir(){
+  if(I.oprimido) return;
+  const t = ahora(); I.oprimido = true; I.reales++;
+  I.pulsos.push({a:t,b:null,visto:false});
+  $('pulsador').classList.add('abajo');
+  if(I.modo==='irq'){ I.pulsos[I.pulsos.length-1].visto=true; I.isr.push({a:t,b:t+DUR_ISR}); detectar(t); }
+  cifrasIrq();
+}
+function soltar(){
+  if(!I.oprimido) return;
+  I.oprimido = false; const p = I.pulsos[I.pulsos.length-1]; if(p) p.b = ahora();
+  $('pulsador').classList.remove('abajo');
+}
+function cifrasIrq(){
+  const perd = I.reales - I.detectadas - (I.oprimido && I.modo==='poll' && !I.pulsos[I.pulsos.length-1].visto ? 1 : 0);
+  $('cifrasIrq').innerHTML =
+    `<div><b>${I.reales}</b><small>Pulsaciones hechas</small></div>`+
+    `<div><b>${I.detectadas}</b><small>Detectadas por el programa</small></div>`+
+    `<div><b style="color:${perd>0?COL.alerta:'inherit'}">${Math.max(0,perd)}</b><small>Perdidas</small></div>`;
+}
+function reiniciarIrq(){
+  Object.assign(I,{pulsos:[],isr:[],sondeos:[],reales:0,detectadas:0,led2:false,oprimido:false,t0:performance.now(),ultimaVuelta:0});
+  $('led2').classList.remove('on'); $('pulsador').classList.remove('abajo');
+  $('codIrq').innerHTML = COD[I.modo]; cifrasIrq();
+}
+function pintarIrq(){
+  const t = ahora(), {g,w,h} = lienzo($('cvIrq'));
+  const X = x => w - (t-x)/VENT*w, carril = h/3;
+  const nombres = ['Pulsador', 'LED del programa principal', I.modo==='irq' ? 'Rutina de interrupción' : 'Instantes en que el programa revisa el pulsador'];
+  g.textAlign='left';
+  nombres.forEach((n,i) => { g.fillStyle=COL.tenue; g.fillText(n, 8, i*carril+15); g.strokeStyle=COL.pista; g.lineWidth=1; g.beginPath(); g.moveTo(0,(i+1)*carril-4); g.lineTo(w,(i+1)*carril-4); g.stroke(); });
+  const alto = carril-34;
+  // pulsador
+  I.pulsos.forEach(p => { const x1=Math.max(0,X(p.a)), x2=X(p.b===null?t:p.b); if(x2<0) return;
+    g.fillStyle = p.visto ? COL.senal : COL.alerta; g.fillRect(x1, 22, Math.max(2,x2-x1), alto); });
+  // LED principal
+  const ini = Math.floor((t-VENT)/500);
+  for(let k=ini;k<=Math.floor(t/500);k++){ if(k<0 || k%2) continue; const x1=Math.max(0,X(k*500)), x2=Math.min(w,X((k+1)*500)); if(x2>x1){ g.fillStyle='#6CF2A0'; g.fillRect(x1, carril+22, x2-x1, alto); } }
+  // tercera pista
+  if(I.modo==='irq'){
+    I.isr.forEach(s => { const x1=Math.max(0,X(s.a)), x2=Math.min(w,X(Math.min(s.b,t))); if(x2>0){ g.fillStyle=COL.cobre; g.fillRect(x1, 2*carril+22, Math.max(3,x2-x1), alto); } });
+  } else {
+    I.sondeos.forEach(s => { const x=X(s.t); if(x<0) return; g.strokeStyle=s.ok?COL.senal:COL.tenue; g.lineWidth=2; g.beginPath(); g.moveTo(x,2*carril+22); g.lineTo(x,2*carril+22+alto); g.stroke();
+      if(s.ok){ g.fillStyle=COL.senal; g.beginPath(); g.arc(x,2*carril+22+alto/2,6,0,6.3); g.fill(); } });
+  }
+}
+function cicloIrq(){
+  if(activa!=='irq'){ I.activo=false; return; }
+  const t = ahora();
+  $('led1').classList.toggle('on', Math.floor(t/500)%2===0);
+  if(I.modo==='poll'){
+    const vuelta = Math.floor(t/1000);
+    if(vuelta > I.ultimaVuelta){
+      const p = I.pulsos[I.pulsos.length-1], ok = I.oprimido && p && !p.visto;
+      if(vuelta - I.ultimaVuelta === 1){ I.sondeos.push({t:vuelta*1000, ok}); if(ok){ p.visto=true; detectar(t); } }
+      I.ultimaVuelta = vuelta; cifrasIrq();
+    }
+  }
+  const corte = t-VENT-1000;
+  I.pulsos = I.pulsos.filter(p => p.b===null || p.b>corte); I.isr = I.isr.filter(s => s.b>corte); I.sondeos = I.sondeos.filter(s => s.t>corte);
+  pintarIrq();
+  requestAnimationFrame(cicloIrq);
+}
+function arrancarIrq(){ if(I.activo) return; I.activo=true; reiniciarIrq(); requestAnimationFrame(cicloIrq); }
+const P = $('pulsador');
+P.addEventListener('pointerdown', e => { e.preventDefault(); P.focus(); oprimir(); });
+['pointerup','pointerleave','pointercancel'].forEach(ev => P.addEventListener(ev, () => { soltar(); cifrasIrq(); }));
+P.addEventListener('keydown', e => { if(e.key===' '||e.key==='Enter'){ e.preventDefault(); if(!e.repeat) oprimir(); } });
+P.addEventListener('keyup', e => { if(e.key===' '||e.key==='Enter'){ soltar(); cifrasIrq(); } });
+P.addEventListener('blur', soltar);
+document.querySelectorAll('input[name=modo]').forEach(r => r.addEventListener('change', () => { I.modo = r.value; reiniciarIrq(); }));
+
+/* ---------- Arranque ---------- */
+opamp(); adc();
+$('codIrq').innerHTML = COD.irq; cifrasIrq();
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(redibujar);
+})();
+</script>
+</body>
+</html>
