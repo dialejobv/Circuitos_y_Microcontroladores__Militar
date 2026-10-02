@@ -4,7 +4,7 @@
 
 ¡Bienvenido a la asignatura! Antes de convertirse en información, muchos datos nacen como una variable física: una temperatura, las revoluciones de un motor, la velocidad del viento. En este curso aprenderás a capturar esas variables con circuitos electrónicos, a acondicionarlas con amplificadores operacionales y a procesarlas con un microcontrolador, para completar la cadena que va del mundo físico al dato útil.
 
-> **Laboratorio interactivo:** Abre los bancos de prueba del curso en tu navegador siguiendo el repositorio indicado
+> **Laboratorio interactivo:** Abre los bancos de prueba del curso en tu navegador 
 > 👉 `https://TU-USUARIO.github.io/NOMBRE-DEL-REPOSITORIO/`
 
 ---
