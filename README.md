@@ -104,20 +104,3 @@ El archivo [`index.html`](index.html) de este repositorio reúne cuatro bancos d
 5. Reyes, C. A. (2006). *Microcontroladores PIC: programación en Basic*. Quito: Rispergraf.
 6. Caprile, S. (2012). *Desarrollo con microcontroladores ARM Cortex-M3*. Puntolibro.
 
-**Material complementario en el aula virtual:** glosario, preguntas de repaso, material multimedia, enlaces en la red y curso virtual.
-
-## 🚀 Cómo usar este repositorio
-
-```
-.
-├── README.md     ← este documento
-└── index.html    ← laboratorio interactivo (HTML, CSS y JavaScript en un solo archivo)
-```
-
-**Para verlo en tu computador:** descarga el repositorio y abre `index.html` con doble clic.
-
-**Para publicarlo con GitHub Pages:** entra a *Settings → Pages*, en *Source* elige *Deploy from a branch*, selecciona la rama `main` y la carpeta `/ (root)`, y guarda. En un par de minutos la página queda disponible en `https://TU-USUARIO.github.io/NOMBRE-DEL-REPOSITORIO/`.
-
----
-
-<sub>Material de apoyo académico. Los modelos del laboratorio son ideales y simplifican los componentes reales.</sub>
