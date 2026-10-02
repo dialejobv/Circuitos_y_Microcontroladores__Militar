@@ -19,7 +19,8 @@
 | **Créditos académicos** | 3 |
 | **Prerrequisitos** | Ninguno |
 | **Correquisitos** | Ninguno |
-| **Docente y coordinador de área** | Andrés Felipe Sánchez Cristo |
+| **Docente de la Materia** | Diego Barragán
+|
 
 ## 🧭 ¿Por qué esta asignatura?
 
