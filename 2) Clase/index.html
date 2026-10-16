@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Banco de pruebas análogo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+html{color-scheme:light}
+@media (prefers-color-scheme: dark){html{color-scheme:dark}}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* Layout: instrument bench — controls rack on the left, oscilloscope screen on the right, readouts under the screen */
+:root{
+  --bg:#EEF2F4; --panel:#FBFCFD; --sunk:#E3E9ED; --fg:#13212B; --muted:#4F606B; --line:#CBD5DB;
+  --accent:#1D5FA6; --accent-soft:#DCE8F5; --on-accent:#FFFFFF;
+  --ok:#2C7A4B; --warn:#A65A0B; --bad:#B3261E;
+  --scope:#0D1820; --grid:#24394A; --grid-strong:#36536A; --scope-text:#9DB3C2;
+  --ch1:#F2C14E; --ch2:#4FC3E8; --ch3:#E77BB8; --ch4:#9AD97A;
+  --sans:'IBM Plex Sans', 'Segoe UI', Arial, sans-serif; --mono:'IBM Plex Mono', Consolas, 'Courier New', monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E161C; --panel:#15212A; --sunk:#1B2A35; --fg:#E2EAEF; --muted:#9BACB8; --line:#2A3B47;
+  --accent:#71A9E6; --accent-soft:#1E3449; --on-accent:#0E161C;
+  --ok:#6CC08F; --warn:#E5A15A; --bad:#EF7A6E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E161C; --panel:#15212A; --sunk:#1B2A35; --fg:#E2EAEF; --muted:#9BACB8; --line:#2A3B47;
+  --accent:#71A9E6; --accent-soft:#1E3449; --on-accent:#0E161C;
+  --ok:#6CC08F; --warn:#E5A15A; --bad:#EF7A6E; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.5;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:20px 48px}
+.wrap{max-width:1320px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px}
+h1{font-size:26px;line-height:1.15;margin:0;font-weight:700;letter-spacing:-0.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:70ch}
+.badge{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+nav.tabs{display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin}
+nav.tabs button{font:500 14px var(--sans);color:var(--muted);background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bench{display:grid;grid-template-columns:minmax(270px,340px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:900px){.bench{grid-template-columns:minmax(0,1fr)}}
+.rack{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.rack h2{font-size:13px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:4px 0 -4px;font-weight:500}
+.ctl{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:2px 8px;align-items:center}
+.ctl label{font-size:14px;grid-column:1/-1;display:flex;justify-content:space-between;gap:8px}
+.ctl label .u{color:var(--muted);font-family:var(--mono);font-size:12px}
+.ctl input[type=range]{width:100%;accent-color:var(--accent)}
+.ctl input.num{font:500 14px var(--mono);width:100%;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);color:var(--fg);text-align:right}
+.ctl.sel{grid-template-columns:minmax(0,1fr)}
+select{font:500 14px var(--sans);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);color:var(--fg);width:100%}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px}
+.chk input{accent-color:var(--accent);width:16px;height:16px}
+.stage{display:flex;flex-direction:column;gap:12px;min-width:0}
+.screen{background:var(--scope);border-radius:10px;padding:10px;border:1px solid var(--line)}
+.screen canvas{width:100%;height:auto;display:block;aspect-ratio:16/9;max-width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font:500 13px var(--mono);color:var(--scope-text);padding:6px 4px 0}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:6px;border-radius:2px}
+.reads{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.read{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.read .k{font-size:12px;color:var(--muted);display:block}
+.read .v{font:600 16px var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.read.ok{border-left:4px solid var(--ok)} .read.warn{border-left:4px solid var(--warn)} .read.bad{border-left:4px solid var(--bad)}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.note p{margin:0;max-width:80ch}
+.eq{font:500 14px var(--mono);background:var(--sunk);border-radius:6px;padding:6px 10px;overflow-x:auto;white-space:nowrap}
+.flags{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font:600 12px var(--mono);padding:3px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill.on.warn{color:var(--warn);border-color:var(--warn)} .pill.on.bad{color:var(--bad);border-color:var(--bad)} .pill.on.ok{color:var(--ok);border-color:var(--ok)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.btn{font:600 14px var(--sans);padding:8px 12px;border-radius:7px;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.tbl-wrap{overflow-x:auto}
+table.res{border-collapse:collapse;font:500 13px var(--mono);font-variant-numeric:tabular-nums;width:100%}
+table.res th,table.res td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;white-space:nowrap}
+table.res th{color:var(--muted);font-weight:500}
+.ex{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.ex h3{margin:0;font-size:17px}
+.ex .meta{font:500 12px var(--mono);color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.ex p{margin:0;max-width:80ch}
+.ans{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.ans label{display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--muted)}
+.ans input{font:500 14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);color:var(--fg)}
+.exlist{display:flex;flex-direction:column;gap:12px}
+.status{font-size:13px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+<header>
+  <div>
+    <span class="badge">Circuitos eléctricos y microcontroladores · laboratorio virtual</span>
+    <h1>Banco de pruebas análogo</h1>
+    <p class="sub">Simulador de amplificadores operacionales, osciladores, filtros activos, fuentes y reguladores. Cambie los valores, observe el osciloscopio y compare lo medido con la teoría de la clase.</p>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs"></nav>
+
+<section id="tab-amp" class="tabpane" role="tabpanel"></section>
+<section id="tab-multi" class="tabpane" role="tabpanel" hidden></section>
+<section id="tab-osc" class="tabpane" role="tabpanel" hidden></section>
+<section id="tab-fil" class="tabpane" role="tabpanel" hidden></section>
+<section id="tab-src" class="tabpane" role="tabpanel" hidden></section>
+<section id="tab-sw" class="tabpane" role="tabpanel" hidden></section>
+<section id="tab-act" class="tabpane" role="tabpanel" hidden></section>
+</div>
+
+<script>
+'use strict';
+/* ---------- utilidades ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const el = (tag, attrs={}, html='') => { const e=document.createElement(tag); for(const k in attrs){ if(k==='class') e.className=attrs[k]; else e.setAttribute(k,attrs[k]); } if(html) e.innerHTML=html; return e; };
+const PREF = [[1e12,'T'],[1e9,'G'],[1e6,'M'],[1e3,'k'],[1,''],[1e-3,'m'],[1e-6,'µ'],[1e-9,'n'],[1e-12,'p']];
+function eng(v, unit='', sig=3){
+  if(v===null||v===undefined||Number.isNaN(v)) return '—';
+  if(!Number.isFinite(v)) return (v>0?'∞':'−∞')+(unit?' '+unit:'');
+  if(v===0) return '0'+(unit?' '+unit:'');
+  const a=Math.abs(v); let p=PREF.find(x=>a>=x[0]*0.9995)||PREF[PREF.length-1];
+  let n=v/p[0]; let s=Number(n.toPrecision(sig)).toString().replace('.',',').replace('-','−');
+  return s+(unit||p[1]?' ':'')+p[1]+unit;
+}
+function num(v, d=2){ if(!Number.isFinite(v)) return '—'; return v.toFixed(d).replace('.',',').replace('-','−'); }
+function parseEng(str){
+  if(typeof str!=='string') return NaN;
+  let s=str.trim().replace(/\s/g,'').replace(',','.').replace('−','-');
+  const m=s.match(/^([-+]?[0-9]*\.?[0-9]+(?:e[-+]?\d+)?)(meg|[pnuµmkMG])?/i);
+  if(!m) return NaN;
+  let v=parseFloat(m[1]); const suf=m[2];
+  const map={p:1e-12,n:1e-9,u:1e-6,'µ':1e-6,m:1e-3,k:1e3,K:1e3,M:1e6,G:1e9};
+  if(suf){ if(suf.toLowerCase()==='meg') v*=1e6; else v*=map[suf]; }
+  return v;
+}
+const par = (...rs) => { let g=0; for(const r of rs){ if(r>0 && Number.isFinite(r)) g+=1/r; } return g>0?1/g:Infinity; };
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+/* complejos */
+const C=(re,im=0)=>({re,im});
+const cadd=(a,b)=>C(a.re+b.re,a.im+b.im), csub=(a,b)=>C(a.re-b.re,a.im-b.im);
+const cmul=(a,b)=>C(a.re*b.re-a.im*b.im,a.re*b.im+a.im*b.re);
+const cdiv=(a,b)=>{const d=b.re*b.re+b.im*b.im; return C((a.re*b.re+a.im*b.im)/d,(a.im*b.re-a.re*b.im)/d);};
+const cabs=a=>Math.hypot(a.re,a.im), carg=a=>Math.atan2(a.im,a.re);
+const cs=(k)=>C(k,0);
+function solve2(a11,a12,a21,a22,b1,b2){ const det=csub(cmul(a11,a22),cmul(a12,a21)); return [cdiv(csub(cmul(b1,a22),cmul(a12,b2)),det), cdiv(csub(cmul(a11,b2),cmul(b1,a21)),det)]; }
+function solve3(A,b){ // eliminación gaussiana compleja 3x3
+  const M=A.map((r,i)=>[...r,b[i]]);
+  for(let i=0;i<3;i++){ let p=i; for(let r=i+1;r<3;r++) if(cabs(M[r][i])>cabs(M[p][i])) p=r; [M[i],M[p]]=[M[p],M[i]];
+    for(let r=i+1;r<3;r++){ const f=cdiv(M[r][i],M[i][i]); for(let c=i;c<4;c++) M[r][c]=csub(M[r][c],cmul(f,M[i][c])); } }
+  const x=[C(0),C(0),C(0)];
+  for(let i=2;i>=0;i--){ let s=M[i][3]; for(let c=i+1;c<3;c++) s=csub(s,cmul(M[i][c],x[c])); x[i]=cdiv(s,M[i][i]); }
+  return x;
+}
+
+/* ---------- controles ---------- */
+function buildControls(container, specs, state, onChange, prefix='x'){
+  container.innerHTML='';
+  for(const sp of specs){
+    if(sp.show && !sp.show(state)) continue;
+    if(sp.type==='head'){ container.appendChild(el('h2',{},sp.label)); continue; }
+    const id='c-'+prefix+'-'+(sp.id||sp.k);
+    if(sp.type==='select'){
+      const w=el('div',{class:'ctl sel'}); const lab=el('label',{for:id},sp.label); const s=el('select',{id});
+      for(const [v,t] of sp.options){ const o=el('option',{value:v},t); if(state[sp.k]===v) o.selected=true; s.appendChild(o); }
+      s.addEventListener('change',()=>{ state[sp.k]=s.value; onChange(sp.rebuild); });
+      w.append(lab,s); container.appendChild(w); continue;
+    }
+    if(sp.type==='check'){
+      const w=el('label',{class:'chk',for:id}); const c=el('input',{type:'checkbox',id}); c.checked=!!state[sp.k];
+      c.addEventListener('change',()=>{ state[sp.k]=c.checked; onChange(sp.rebuild); });
+      w.append(c,document.createTextNode(sp.label)); container.appendChild(w); continue;
+    }
+    const w=el('div',{class:'ctl'});
+    const lab=el('label',{for:id}); lab.innerHTML=`<span>${sp.label}</span><span class="u">${sp.unit||''}</span>`;
+    const r=el('input',{type:'range',id:id+'-r',min:0,max:1000,step:1,'aria-label':sp.label});
+    const n=el('input',{type:'text',id,class:'num',inputmode:'decimal'});
+    const toPos=v=> sp.log ? 1000*Math.log(v/sp.min)/Math.log(sp.max/sp.min) : 1000*(v-sp.min)/(sp.max-sp.min);
+    const fromPos=p=>{ let v= sp.log ? sp.min*Math.pow(sp.max/sp.min,p/1000) : sp.min+(sp.max-sp.min)*p/1000; if(sp.step) v=Math.round(v/sp.step)*sp.step; return Number(v.toPrecision(3)); };
+    const show=v=>{ n.value = sp.fmt? sp.fmt(v) : (sp.log? eng(v).replace(/ /g,'') : String(Number(v.toPrecision(4))).replace('.',',')); r.value=clamp(toPos(v),0,1000); };
+    show(state[sp.k]);
+    r.addEventListener('input',()=>{ state[sp.k]=fromPos(+r.value); n.value= sp.log? eng(state[sp.k]).replace(/ /g,'') : String(state[sp.k]).replace('.',','); onChange(false); });
+    n.addEventListener('change',()=>{ const v=parseEng(n.value); if(Number.isFinite(v)){ state[sp.k]=v; show(v); onChange(false);} else show(state[sp.k]); });
+    w.append(lab,r,n); container.appendChild(w);
+  }
+}
+function readouts(container, items){
+  container.innerHTML='';
+  for(const it of items){ const d=el('div',{class:'read'+(it.cls?' '+it.cls:'')}); d.innerHTML=`<span class="k">${it.k}</span><span class="v">${it.v}</span>`; container.appendChild(d); }
+}
+function pills(container, items){
+  container.innerHTML='';
+  for(const it of items){ container.appendChild(el('span',{class:'pill'+(it.on?' on '+(it.cls||'warn'):'')},it.t)); }
+}
+
+/* ---------- pantalla de osciloscopio ---------- */
+function setupCanvas(cv){ const dpr=window.devicePixelRatio||1; const w=cv.clientWidth||800; const h=Math.round(w*9/16); cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr); const ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h}; }
+function niceStep(range, n){ const raw=range/n; const p=Math.pow(10,Math.floor(Math.log10(raw))); const m=raw/p; return (m<1.5?1:m<3.5?2:m<7.5?5:10)*p; }
+function drawScope(cv, o){
+  const {ctx,w,h}=setupCanvas(cv);
+  const L=56,R=12,T=12,B=34; const pw=w-L-R, ph=h-T-B;
+  ctx.fillStyle=css('--scope'); ctx.fillRect(0,0,w,h);
+  const x0=o.xmin, x1=o.xmax, y0=o.ymin, y1=o.ymax;
+  const X=x=>L+(x-x0)/(x1-x0)*pw;
+  const Y=y=>T+(1-(y-y0)/(y1-y0))*ph;
+  ctx.font='12px '+css('--mono'); ctx.textBaseline='middle';
+  // grid
+  const ys=niceStep(y1-y0,8);
+  ctx.strokeStyle=css('--grid'); ctx.lineWidth=1; ctx.fillStyle=css('--scope-text'); ctx.textAlign='right';
+  for(let y=Math.ceil(y0/ys)*ys; y<=y1+1e-12; y+=ys){ const py=Y(y); ctx.beginPath(); ctx.moveTo(L,py); ctx.lineTo(L+pw,py); ctx.strokeStyle= Math.abs(y)<ys*1e-6? css('--grid-strong'):css('--grid'); ctx.stroke(); ctx.fillText(o.yfmt?o.yfmt(y):eng(y,o.yunit||'V',3),L-6,py); }
+  ctx.textAlign='center'; ctx.textBaseline='top';
+  if(o.logx){
+    for(let d=Math.floor(Math.log10(x0)); d<=Math.ceil(Math.log10(x1)); d++){
+      for(const m of [1,2,5]){ const f=m*Math.pow(10,d); if(f<x0||f>x1) continue; const px=L+Math.log10(f/x0)/Math.log10(x1/x0)*pw; ctx.strokeStyle= m===1?css('--grid-strong'):css('--grid'); ctx.beginPath(); ctx.moveTo(px,T); ctx.lineTo(px,T+ph); ctx.stroke(); if(m===1) ctx.fillText(eng(f,'Hz',2),px,T+ph+6); }
+    }
+  } else {
+    const xs=niceStep(x1-x0,10);
+    for(let x=Math.ceil(x0/xs)*xs; x<=x1+1e-15; x+=xs){ const px=X(x); ctx.strokeStyle=css('--grid'); ctx.beginPath(); ctx.moveTo(px,T); ctx.lineTo(px,T+ph); ctx.stroke(); ctx.fillText(o.xfmt?o.xfmt(x):eng(x,o.xunit||'s',3),px,T+ph+6); }
+  }
+  ctx.strokeStyle=css('--grid-strong'); ctx.strokeRect(L,T,pw,ph);
+  // markers
+  if(o.hlines) for(const hl of o.hlines){ if(hl.y<y0||hl.y>y1) continue; ctx.setLineDash([6,5]); ctx.strokeStyle=hl.color; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(L,Y(hl.y)); ctx.lineTo(L+pw,Y(hl.y)); ctx.stroke(); ctx.setLineDash([]); if(hl.label){ ctx.fillStyle=hl.color; ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.fillText(hl.label,L+6,Y(hl.y)-2);} }
+  if(o.vlines) for(const vl of o.vlines){ const px=o.logx? L+Math.log10(vl.x/x0)/Math.log10(x1/x0)*pw : X(vl.x); if(px<L||px>L+pw) continue; ctx.setLineDash([6,5]); ctx.strokeStyle=vl.color; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(px,T); ctx.lineTo(px,T+ph); ctx.stroke(); ctx.setLineDash([]); if(vl.label){ ctx.fillStyle=vl.color; ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(vl.label,px+4,T+4);} }
+  // traces
+  ctx.save(); ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+  for(const tr of o.traces){
+    ctx.strokeStyle=tr.color; ctx.lineWidth=tr.width||2; ctx.setLineDash(tr.dash||[]); ctx.beginPath();
+    const n=tr.x.length; let started=false;
+    for(let i=0;i<n;i++){ const xv=tr.x[i], yv=tr.y[i]; if(!Number.isFinite(yv)){started=false; continue;}
+      const px=o.logx? L+Math.log10(xv/x0)/Math.log10(x1/x0)*pw : X(xv); const py=Y(clamp(yv,y0-(y1-y0),y1+(y1-y0)));
+      if(!started){ctx.moveTo(px,py); started=true;} else ctx.lineTo(px,py); }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.restore();
+  if(o.xlabel){ ctx.fillStyle=css('--scope-text'); ctx.textAlign='right'; ctx.textBaseline='bottom'; ctx.fillText(o.xlabel,L+pw,h-2); }
+}
+function legend(container, items){ container.innerHTML=items.map(i=>`<span><i style="background:${i.c}"></i>${i.t}</span>`).join(''); }
+
+/* ---------- pestañas ---------- */
+const TABS=[['amp','Amplificadores'],['multi','Multientradas e instrumentación'],['osc','Oscilador Miller-Schmitt'],['fil','Filtros activos'],['src','Fuentes y reguladores'],['sw','Conmutados'],['act','Actividad práctica']];
+const tabsNav=$('#tabs'); const renderers={};
+function showTab(id){
+  for(const [k] of TABS){ $('#tab-'+k).hidden = k!==id; const b=$('#tb-'+k); b.setAttribute('aria-selected', k===id?'true':'false'); }
+  try{ localStorage.setItem('banco-tab',id); }catch(e){}
+  if(renderers[id]) requestAnimationFrame(()=>renderers[id]());
+}
+for(const [k,t] of TABS){ const b=el('button',{id:'tb-'+k,role:'tab','aria-controls':'tab-'+k,type:'button'},t); b.addEventListener('click',()=>showTab(k)); tabsNav.appendChild(b); }
+
+function benchLayout(pane, opts={}){
+  pane.innerHTML='';
+  const bench=el('div',{class:'bench'});
+  const rack=el('div',{class:'rack'});
+  const stage=el('div',{class:'stage'});
+  const screen=el('div',{class:'screen'}); const cv=el('canvas',{role:'img','aria-label':opts.aria||'Pantalla del osciloscopio'}); const leg=el('div',{class:'legend'});
+  screen.append(cv,leg);
+  const flags=el('div',{class:'flags'});
+  const reads=el('div',{class:'reads'});
+  const note=el('div',{class:'note'});
+  stage.append(screen,flags,reads,note);
+  bench.append(rack,stage); pane.appendChild(bench);
+  return {rack,cv,leg,flags,reads,note,stage};
+}
+
+/* ---------- modelos de operacional ---------- */
+const OPAMPS={
+  ideal:{name:'Ideal',SR:Infinity,GBW:Infinity,VOS:0,Ad:1e9},
+  lm741:{name:'LM741',SR:0.5e6,GBW:1e6,VOS:1e-3,Ad:2e5},
+  tl081:{name:'TL081',SR:13e6,GBW:3e6,VOS:3e-3,Ad:2e5},
+  lm358:{name:'LM358',SR:0.3e6,GBW:1e6,VOS:2e-3,Ad:1e5}
+};
+
+/* =====================================================
+   1. AMPLIFICADORES (dominio del tiempo)
+   ===================================================== */
+const amp={circuit:'inversor',wave:'seno',A:0.5,off:0,f:1000,noise:0,op:'lm741',vcc:15,drop:1.5,vos:false,xy:false,
+  R1:10e3,RF:100e3,Vref:0,R:10e3,Cc:10e-9,RFint:1e6,useRF:false,Rs:100,Vth:0};
+const AMP_INFO={
+  inversor:{t:'Amplificador inversor',eq:'A = −RF / R1    Zi = R1    R+ = R1 ∥ RF',obs:'Suba la amplitud hasta ver el recorte en VOH o VOL. Con LM741, 5 Vp de salida y frecuencias altas aparece el slew rate: la senoide se vuelve triangular.'},
+  noinv:{t:'Amplificador no inversor',eq:'A = 1 + RF / R1    Zi ≈ Zi,op·Ad/A',obs:'La salida está en fase. Compare la ganancia medida con 1 + RF/R1 y busque la máxima entrada sin recorte: (VOH − VOL)/(2A) de pico.'},
+  seguidor:{t:'Seguidor de voltaje',eq:'vO = vI · Ad/(1 + Ad) ≈ vI',obs:'Con VOS activado aparece un pequeño error DC. La ganancia es 1 pero el ancho de banda es el máximo del integrado (GBW).'},
+  comparador:{t:'Comparador (lazo abierto)',eq:'vO = VOH si vI > Vref ; VOL si vI < Vref',obs:'Agregue ruido: el comparador rebota cerca del umbral. Con LM741 observe el tiempo de subida (VOH − VOL)/SR.'},
+  integrador:{t:'Integrador de Miller',eq:'vO = −(1/RC) ∫ vI dt + k    m = −vI/(RC)',obs:'Con onda cuadrada sale un triángulo. Sin RF, la onda arranca en 0 y no queda centrada (el valor inicial k). Active RF en paralelo para estabilizar el punto DC.'},
+  derivador:{t:'Derivador',eq:'vO = −RC · dvI/dt    H(s) = −sRC/(1 + sRsC)',obs:'Con triángulo sale una cuadrada. Ponga Rs = 0 con onda cuadrada: aparecen picos limitados por los rieles. Rs pequeña los suaviza.'},
+  rectificador:{t:'Rectificador de precisión (media onda)',eq:'vO = vI si vI > 0 ; vO = 0 si vI < 0',obs:'Funciona con señales de milivoltios. A frecuencia alta con LM741 se pierde un trozo de cada semiciclo: la salida del operacional tarda en subir desde VOL.'},
+  schmittni:{t:'Schmitt no inversor',eq:'V1 = V(1+R1/RF) − VOL·R1/RF    V2 = V(1+R1/RF) − VOH·R1/RF    VH = (VOH−VOL)·R1/RF',obs:'Active el modo XY para ver el lazo de histéresis. Agregue ruido y compare con el comparador simple.'},
+  schmittinv:{t:'Schmitt inversor',eq:'V1 = (V·RF + VOH·R1)/(RF+R1)    V2 = (V·RF + VOL·R1)/(RF+R1)',obs:'Al subir vI hasta V1 la salida cae a VOL; al bajar hasta V2 vuelve a VOH. Use XY para ver el lazo invertido.'}
+};
+function ampSpecs(){
+  const s=amp; const c=s.circuit;
+  const L=[
+    {type:'head',label:'Circuito'},
+    {k:'circuit',type:'select',label:'Montaje',rebuild:true,options:[['inversor','Inversor'],['noinv','No inversor'],['seguidor','Seguidor'],['comparador','Comparador'],['integrador','Integrador de Miller'],['derivador','Derivador'],['rectificador','Rectificador de precisión'],['schmittni','Schmitt no inversor'],['schmittinv','Schmitt inversor']]},
+    {k:'R1',label:'R1',unit:'Ω',min:100,max:1e6,log:true,show:s=>['inversor','noinv','schmittni','schmittinv'].includes(s.circuit)},
+    {k:'RF',label:'RF',unit:'Ω',min:100,max:10e6,log:true,show:s=>['inversor','noinv','schmittni','schmittinv'].includes(s.circuit)},
+    {k:'Vth',label:'V (referencia del Schmitt)',unit:'V',min:-10,max:10,step:0.01,show:s=>['schmittni','schmittinv'].includes(s.circuit)},
+    {k:'Vref',label:'Vref',unit:'V',min:-10,max:10,step:0.01,show:s=>s.circuit==='comparador'},
+    {k:'R',label:'R',unit:'Ω',min:100,max:10e6,log:true,show:s=>['integrador','derivador'].includes(s.circuit)},
+    {k:'Cc',label:'C',unit:'F',min:100e-12,max:100e-6,log:true,show:s=>['integrador','derivador'].includes(s.circuit)},
+    {k:'useRF',type:'check',label:'RF en paralelo con C',rebuild:true,show:s=>s.circuit==='integrador'},
+    {k:'RFint',label:'RF (paralelo)',unit:'Ω',min:10e3,max:100e6,log:true,show:s=>s.circuit==='integrador'&&s.useRF},
+    {k:'Rs',label:'Rs (serie con C)',unit:'Ω',min:0,max:5000,step:1,show:s=>s.circuit==='derivador'},
+    {type:'head',label:'Generador'},
+    {k:'wave',type:'select',label:'Forma de onda',options:[['seno','Senoidal'],['cuadrada','Cuadrada'],['triangular','Triangular']]},
+    {k:'A',label:'Amplitud (pico)',unit:'V',min:0,max:15,step:0.001},
+    {k:'off',label:'Nivel DC',unit:'V',min:-10,max:10,step:0.01},
+    {k:'f',label:'Frecuencia',unit:'Hz',min:1,max:1e6,log:true},
+    {k:'noise',label:'Ruido (pico)',unit:'V',min:0,max:3,step:0.01},
+    {type:'head',label:'Operacional y fuente'},
+    {k:'op',type:'select',label:'Integrado',options:Object.entries(OPAMPS).map(([k,v])=>[k,v.name+(k==='ideal'?'':` (SR ${eng(v.SR,'V/s')}, GBW ${eng(v.GBW,'Hz')})`)])},
+    {k:'vcc',label:'Fuente dual ±Vcc',unit:'V',min:3,max:18,step:0.5},
+    {k:'drop',label:'Margen de salida (Vcc − VOH)',unit:'V',min:0,max:3,step:0.1},
+    {k:'vos',type:'check',label:'Incluir voltaje de offset VOS'},
+    {k:'xy',type:'check',label:'Modo XY (vO contra vI)'}
+  ];
+  return L;
+}
+function srcFn(s){
+  const w=2*Math.PI*s.f;
+  if(s.wave==='seno') return t=>s.off+s.A*Math.sin(w*t);
+  if(s.wave==='cuadrada') return t=>{ const ph=(t*s.f)%1; return s.off+(ph<0.5?s.A:-s.A); };
+  return t=>{ const ph=(t*s.f+0.25)%1; return s.off+s.A*(ph<0.5? (4*ph-1) : (3-4*ph)); };
+}
+function simAmp(s){
+  const op=OPAMPS[s.op]; const VOH=s.vcc-s.drop, VOL=-(s.vcc-s.drop);
+  const VOS= s.vos? op.VOS : 0;
+  const T=1/s.f; const per=s.circuit==='integrador'?4:4; const pre= s.circuit==='integrador'?0:3;
+  const N=1600*per; const dt=T/1600; const total=(pre+per)*1600;
+  const src=srcFn(s); const rnd=rng(12345);
+  let y=0, ylpf=0, vop=VOL, vc=0; let slewed=false, clipped=false;
+  if(['schmittni','schmittinv','comparador'].includes(s.circuit)){ y=VOL; }
+  const tx=[],vin=[],vout=[],aux=[]; let lastIn=src(-dt);
+  const trans=[]; let prevSign=Math.sign(y)||-1;
+  const noiseGain = s.circuit==='seguidor'?1:(['inversor','noinv'].includes(s.circuit)?1+s.RF/s.R1:1);
+  const fcl= op.GBW/noiseGain; const kl= Number.isFinite(fcl)? 1-Math.exp(-dt*2*Math.PI*fcl):1;
+  const maxStep= op.SR*dt;
+  for(let i=0;i<total;i++){
+    const t=i*dt; let vi=src(t); if(s.noise>0) vi+= s.noise*(rnd()*2-1);
+    let target;
+    switch(s.circuit){
+      case 'inversor': target=-(s.RF/s.R1)*vi+(1+s.RF/s.R1)*VOS; break;
+      case 'noinv': target=(1+s.RF/s.R1)*(vi+VOS); break;
+      case 'seguidor': target=vi+VOS; break;
+      case 'comparador': target=op.Ad*(vi-s.Vref+VOS); break;
+      case 'schmittni': { const vp=vi*s.RF/(s.RF+s.R1)+y*s.R1/(s.RF+s.R1); target=op.Ad*(vp-s.Vth+VOS); break; }
+      case 'schmittinv': { const vp=s.Vth*s.RF/(s.RF+s.R1)+y*s.R1/(s.RF+s.R1); target=op.Ad*(vp-vi+VOS); break; }
+      case 'integrador': { let d=-(vi-VOS)/(s.R*s.Cc); if(s.useRF) d-= (y-VOS)/(s.RFint*s.Cc); if(Math.abs(d*dt)>maxStep){ d=Math.sign(d)*op.SR; slewed=true; } target=y+d*dt; break; }
+      case 'derivador': { let i_c; if(s.Rs>0){ const tau=s.Rs*s.Cc; vc+= (vi-vc)*(1-Math.exp(-dt/tau)); i_c=(vi-vc)/s.Rs; } else { i_c=s.Cc*(vi-lastIn)/dt; } target=-s.R*i_c; break; }
+      case 'rectificador': { const tgt= vi>0 ? vi+0.6 : -op.Ad*1e-3; const d=clamp(tgt,VOL,VOH)-vop; if(Math.abs(d)>maxStep){ vop+=Math.sign(d)*maxStep; slewed=true;} else vop+=d; target=clamp(vop-0.6,0,Math.max(vi,0)); break; }
+    }
+    lastIn=vi;
+    if(s.circuit==='rectificador'){ y=target; }
+    else if(s.circuit==='integrador'){ if(target>VOH||target<VOL) clipped=true; y=clamp(target,VOL,VOH); }
+    else {
+      let tg=target; if(tg>VOH){tg=VOH; if(!['comparador','schmittni','schmittinv'].includes(s.circuit)) clipped=true;} if(tg<VOL){tg=VOL; if(!['comparador','schmittni','schmittinv'].includes(s.circuit)) clipped=true;}
+      if(['inversor','noinv','seguidor'].includes(s.circuit)){ ylpf+= (tg-ylpf)*kl; tg=ylpf; }
+      const d=tg-y; if(Math.abs(d)>maxStep){ y+=Math.sign(d)*maxStep; if(i>=pre*1600) slewed=true; } else y=tg;
+    }
+    if(i>=pre*1600){
+      tx.push(t-pre*T); vin.push(vi); vout.push(y);
+      if(['schmittni','schmittinv','comparador'].includes(s.circuit)){ const sg=Math.sign(y)||prevSign; if(sg!==prevSign){ trans.push({vi,dir:sg}); prevSign=sg; } }
+    } else { prevSign=Math.sign(y)||prevSign; }
+  }
+  return {tx,vin,vout,VOH,VOL,slewed,clipped,trans,fcl,op,VOS,T};
+}
+function stats(a){ let mn=Infinity,mx=-Infinity,sum=0; for(const v of a){ if(v<mn)mn=v; if(v>mx)mx=v; sum+=v; } return {min:mn,max:mx,pp:mx-mn,mean:sum/a.length}; }
+function renderAmp(){
+  const pane=$('#tab-amp'); if(!pane._ui){ pane._ui=benchLayout(pane,{aria:'Osciloscopio del amplificador'}); }
+  const ui=pane._ui; if(!ui._built){ buildControls(ui.rack, ampSpecs(), amp, (rb)=>{ if(rb){ ui._built=false; } renderAmp(); }, 'amp'); ui._built=true; }
+  const s=amp; const r=simAmp(s);
+  const c1=css('--ch1'), c2=css('--ch2'), c3=css('--ch3');
+  const lim=Math.max(s.vcc, Math.abs(s.off)+s.A+s.noise)*1.08;
+  const info=AMP_INFO[s.circuit];
+  if(s.xy){
+    const si=stats(r.vin); const xr=Math.max(Math.abs(si.min),Math.abs(si.max))*1.15||1;
+    drawScope(ui.cv,{xmin:-xr,xmax:xr,ymin:-lim,ymax:lim,xunit:'V',traces:[{x:r.vin,y:r.vout,color:c2}],xlabel:'eje X: vI',
+      hlines:[{y:r.VOH,color:c3,label:'VOH'},{y:r.VOL,color:c3,label:'VOL'}]});
+    legend(ui.leg,[{c:c2,t:'vO en función de vI (curva de transferencia)'}]);
+  } else {
+    const hl=[{y:r.VOH,color:c3,label:'VOH'},{y:r.VOL,color:c3,label:'VOL'}];
+    if(s.circuit==='comparador') hl.push({y:s.Vref,color:'#8FA3B0',label:'Vref'});
+    if(s.circuit==='schmittni'||s.circuit==='schmittinv'){ const th=schmittTh(s,r); hl.push({y:th.V1,color:c1,label:'V1'},{y:th.V2,color:c1,label:'V2'}); }
+    drawScope(ui.cv,{xmin:0,xmax:r.tx[r.tx.length-1],ymin:-lim,ymax:lim,traces:[{x:r.tx,y:r.vin,color:c1,width:1.6},{x:r.tx,y:r.vout,color:c2,width:2.2}],hlines:hl,xlabel:'tiempo'});
+    legend(ui.leg,[{c:c1,t:'CH1 vI (entrada)'},{c:c2,t:'CH2 vO (salida)'},{c:c3,t:'rieles VOH / VOL'}]);
+  }
+  const si=stats(r.vin), so=stats(r.vout);
+  let cor=0; for(let i=0;i<r.vin.length;i++) cor+=(r.vin[i]-si.mean)*(r.vout[i]-so.mean);
+  const gm= si.pp>1e-9? Math.sign(cor)*so.pp/si.pp : NaN;
+  const items=[]; let theo=null;
+  const Rp=par(s.R1,s.RF);
+  switch(s.circuit){
+    case 'inversor': theo=-s.RF/s.R1; items.push({k:'Ganancia teórica −RF/R1',v:num(theo,3)},{k:'Ganancia medida',v:num(gm,3)},{k:'Zi = R1',v:eng(s.R1,'Ω')},{k:'R+ para balancear',v:eng(Rp,'Ω')},{k:'Máx. entrada sin recorte',v:eng(r.VOH/Math.abs(theo),'V')+' pico'}); break;
+    case 'noinv': theo=1+s.RF/s.R1; items.push({k:'Ganancia teórica 1 + RF/R1',v:num(theo,3)},{k:'Ganancia medida',v:num(gm,3)},{k:'R+ para balancear',v:eng(Rp,'Ω')},{k:'Máx. entrada sin recorte',v:eng(r.VOH/theo,'V')+' pico'}); break;
+    case 'seguidor': theo=1; items.push({k:'Ganancia teórica',v:'1'},{k:'Ganancia medida',v:num(gm,4)},{k:'Factor de mejora',v:eng(r.op.Ad,'')}); break;
+    case 'comparador': items.push({k:'Resolución (VOH−VOL)/Ad',v:eng((r.VOH-r.VOL)/r.op.Ad,'V')},{k:'Tiempo de conmutación',v: Number.isFinite(r.op.SR)? eng((r.VOH-r.VOL)/r.op.SR,'s'):'0 s'},{k:'Conmutaciones en pantalla',v:String(r.trans.length)}); break;
+    case 'integrador': { const m=s.A/(s.R*s.Cc); items.push({k:'Pendiente |vI|/RC',v:eng(m,'V/s')},{k:'Triángulo esperado (cuadrada)',v:eng(s.A/(s.R*s.Cc)*r.T/2,'V')+' pp'},{k:'vO medida',v:eng(so.pp,'V')+' pp'}); if(s.vos||true){ const drift=r.op.VOS/(s.R*s.Cc); items.push({k:'Deriva por VOS (sin RF)',v:eng(drift,'V/s')},{k:'Saturaría en',v:drift>0? eng(r.VOH/drift,'s'):'—'}); } if(s.useRF) items.push({k:'Integra arriba de 1/(2πRF·C)',v:eng(1/(2*Math.PI*s.RFint*s.Cc),'Hz')}); break; }
+    case 'derivador': items.push({k:'RC',v:eng(s.R*s.Cc,'s')},{k:'vO medida',v:eng(so.pp,'V')+' pp'},{k:'Corte de Rs: 1/(2πRsC)',v: s.Rs>0? eng(1/(2*Math.PI*s.Rs*s.Cc),'Hz'):'∞'}); break;
+    case 'rectificador': items.push({k:'Codo efectivo 0,6 V/Ad',v:eng(0.6/r.op.Ad,'V')},{k:'Tiempo perdido por SR',v: Number.isFinite(r.op.SR)? eng((Math.abs(r.VOL)+0.6)/r.op.SR,'s'):'0 s'},{k:'Pico de salida',v:eng(so.max,'V')}); break;
+    case 'schmittni': case 'schmittinv': { const th=schmittTh(s,r); const up=r.trans.map(x=>x.vi); const mx=up.length?Math.max(...up):NaN, mn=up.length?Math.min(...up):NaN;
+      items.push({k:'V1 teórico (disparo)',v:eng(th.V1,'V')},{k:'V2 teórico (apagado)',v:eng(th.V2,'V')},{k:'VH = V1 − V2',v:eng(th.V1-th.V2,'V')},{k:'Umbral superior medido',v:eng(mx,'V')},{k:'Umbral inferior medido',v:eng(mn,'V')}); break; }
+  }
+  items.push({k:'VOH / VOL',v:eng(r.VOH,'V')+' / '+eng(r.VOL,'V')});
+  if(['inversor','noinv','seguidor'].includes(s.circuit)){ items.push({k:'Ancho de banda en lazo cerrado',v:eng(r.fcl,'Hz')}); if(Number.isFinite(r.op.SR)) items.push({k:'fp = SR/(2π·Vp salida)',v:eng(r.op.SR/(2*Math.PI*Math.max(so.max,1e-9)),'Hz')}); }
+  readouts(ui.reads, items);
+  pills(ui.flags,[{t:'Recorte en los rieles',on:r.clipped,cls:'bad'},{t:'Limitado por slew rate',on:r.slewed,cls:'warn'},{t:'Frecuencia > ancho de banda',on:['inversor','noinv','seguidor'].includes(s.circuit)&&s.f>r.fcl,cls:'warn'},{t:'Operando bien',on:!r.clipped&&!r.slewed,cls:'ok'}]);
+  ui.note.innerHTML=`<p><b>${info.t}</b></p><div class="eq">${info.eq}</div><p>${info.obs}</p>`;
+}
+function schmittTh(s,r){
+  const VOH=r?r.VOH:s.vcc-s.drop, VOL=r?r.VOL:-(s.vcc-s.drop);
+  if(s.circuit==='schmittni'){ const k=s.R1/s.RF; return {V1:s.Vth*(1+k)-VOL*k, V2:s.Vth*(1+k)-VOH*k}; }
+  const a=s.RF/(s.RF+s.R1), b=s.R1/(s.RF+s.R1); return {V1:s.Vth*a+VOH*b, V2:s.Vth*a+VOL*b};
+}
+renderers.amp=renderAmp;
+
+/* =====================================================
+   2. MULTIENTRADAS, INSTRUMENTACIÓN Y ACONDICIONAMIENTO
+   ===================================================== */
+const mu={v1:1,R1:20e3,v2:0.5,R2:50e3,v3:0.2,R3:20e3,v4:0,R4:0,RauxN:50e3,RauxP:0,RF:100e3,vcc:15,
+  chip:'ina128',RG:499,vexc:5,sens:2,carga:50,vref:1.65,cmrr:100,
+  inMin:-0.5,inMax:0.5,outMin:0,outMax:3.3,refV:3.3,RFc:100e3};
+function renderMulti(){
+  const pane=$('#tab-multi');
+  if(!pane._ui){
+    pane.innerHTML='';
+    const bench=el('div',{class:'bench'}); const rack=el('div',{class:'rack'}); const stage=el('div',{class:'stage'});
+    bench.append(rack,stage); pane.appendChild(bench);
+    pane._ui={rack,stage};
+    const specs=[
+      {type:'head',label:'Multientradas universal'},
+      {k:'v1',label:'v1 (entrada −)',unit:'V',min:-10,max:10,step:0.01},{k:'R1',label:'R1 (0 = sin conectar)',unit:'Ω',min:0,max:1e6,step:100},
+      {k:'v2',label:'v2 (entrada −)',unit:'V',min:-10,max:10,step:0.01},{k:'R2',label:'R2 (0 = sin conectar)',unit:'Ω',min:0,max:1e6,step:100},
+      {k:'v3',label:'v3 (entrada +)',unit:'V',min:-10,max:10,step:0.01},{k:'R3',label:'R3 (0 = sin conectar)',unit:'Ω',min:0,max:1e6,step:100},
+      {k:'v4',label:'v4 (entrada +)',unit:'V',min:-10,max:10,step:0.01},{k:'R4',label:'R4 (0 = sin conectar)',unit:'Ω',min:0,max:1e6,step:100},
+      {k:'RauxN',label:'RAUX a tierra en la entrada −',unit:'Ω',min:0,max:1e6,step:100},
+      {k:'RauxP',label:'RAUX a tierra en la entrada +',unit:'Ω',min:0,max:1e6,step:100},
+      {k:'RF',label:'RF',unit:'Ω',min:1e3,max:1e6,step:100},
+      {k:'vcc',label:'Fuente ±Vcc',unit:'V',min:3,max:18,step:0.5},
+      {type:'head',label:'Amplificador de instrumentación'},
+      {k:'chip',type:'select',label:'Integrado',options:[['ina128','INA128 (G = 1 + 50 kΩ/RG)'],['ad620','AD620 (G = 1 + 49,4 kΩ/RG)']]},
+      {k:'RG',label:'RG',unit:'Ω',min:10,max:1e6,log:true},
+      {k:'vexc',label:'Excitación del puente',unit:'V',min:1,max:10,step:0.1},
+      {k:'sens',label:'Sensibilidad del sensor',unit:'mV/V',min:0.1,max:5,step:0.1},
+      {k:'carga',label:'Carga aplicada',unit:'%',min:-100,max:100,step:1},
+      {k:'vref',label:'VREF (pin 5)',unit:'V',min:0,max:5,step:0.01},
+      {k:'cmrr',label:'CMRR',unit:'dB',min:60,max:130,step:1},
+      {type:'head',label:'Acondicionamiento de señal'},
+      {k:'inMin',label:'vI mínimo del sensor',unit:'V',min:-10,max:10,step:0.01},{k:'inMax',label:'vI máximo del sensor',unit:'V',min:-10,max:10,step:0.01},
+      {k:'outMin',label:'vO mínimo (ADC)',unit:'V',min:-10,max:10,step:0.01},{k:'outMax',label:'vO máximo (ADC)',unit:'V',min:-10,max:10,step:0.01},
+      {k:'refV',label:'Referencia disponible',unit:'V',min:-15,max:15,step:0.01},{k:'RFc',label:'RF elegida',unit:'Ω',min:1e3,max:1e6,step:100}
+    ];
+    const fmt=v=>eng(v).replace(/ /g,'');
+    specs.forEach(sp=>{ if(sp.unit==='Ω' && !sp.log){ sp.fmt=fmt; } });
+    buildControls(rack,specs,mu,()=>renderMulti(),'mu');
+  }
+  const st=pane._ui.stage; st.innerHTML='';
+  const VOH=mu.vcc-1.5;
+  // universal
+  const RN=par(mu.R1,mu.R2,mu.RauxN), RP=par(mu.R3,mu.R4,mu.RauxP);
+  const gN = Number.isFinite(RN)? 1+mu.RF/RN : 1;
+  const k1= mu.R1>0? -mu.RF/mu.R1:0, k2= mu.R2>0? -mu.RF/mu.R2:0;
+  const k3= mu.R3>0&&Number.isFinite(RP)? RP/mu.R3*gN:0, k4= mu.R4>0&&Number.isFinite(RP)? RP/mu.R4*gN:0;
+  const kAuxP= mu.RauxP>0? RP/mu.RauxP*gN:0, kAuxN= mu.RauxN>0? mu.RF/mu.RauxN:0;
+  const vIdeal=k1*mu.v1+k2*mu.v2+k3*mu.v3+k4*mu.v4; const vO=clamp(vIdeal,-VOH,VOH);
+  const Rminus=par(RN,mu.RF), Rplus=RP;
+  const Aplus=k3+k4+kAuxP, Aminus=Math.abs(k1)+Math.abs(k2)+kAuxN;
+  const bal= Number.isFinite(Rplus)&&Math.abs(Rplus-Rminus)/Rminus<0.01;
+  const n1=el('div',{class:'note'});
+  n1.innerHTML=`<p><b>Multientradas universal (sumador-restador)</b></p>
+  <div class="eq">entradas −: kj = −RF/Rj    entradas +: kj = (RP/Rj)(1 + RF/RN)    A+ = A− + 1</div>`;
+  const r1=el('div',{class:'reads'});
+  readouts(r1,[{k:'Peso de v1',v:num(k1,3)},{k:'Peso de v2',v:num(k2,3)},{k:'Peso de v3',v:num(k3,3)},{k:'Peso de v4',v:num(k4,3)},
+    {k:'vO = Σ kj·vj',v:eng(vO,'V'),cls:Math.abs(vIdeal)>VOH?'bad':''},{k:'RN = R1 ∥ R2 ∥ RAUX−',v:eng(RN,'Ω')},{k:'RP = R3 ∥ R4 ∥ RAUX+',v:eng(RP,'Ω')},
+    {k:'R− = RN ∥ RF',v:eng(Rminus,'Ω')},{k:'R+ = RP',v:eng(Rplus,'Ω')},{k:'Balance eléctrico (R+ = R−)',v:bal?'Sí':'No',cls:bal?'ok':'warn'},
+    {k:'A+ (con auxiliares)',v:num(Aplus,3)},{k:'A− + 1 (con auxiliares)',v:num(Aminus+1,3)}]);
+  // instrumentación
+  const Gk= mu.chip==='ina128'?50e3:49.4e3; const G=1+Gk/mu.RG;
+  const vd=mu.vexc*mu.sens*1e-3*mu.carga/100; const vcm=mu.vexc/2;
+  const vOi=clamp(G*vd+mu.vref+vcm*G/Math.pow(10,mu.cmrr/20),-VOH,VOH);
+  const code=Math.round(clamp(vOi,0,3.3)/3.3*4095);
+  const n2=el('div',{class:'note'}); n2.innerHTML=`<p><b>Amplificador de instrumentación con puente de galgas</b></p><div class="eq">G = 1 + ${mu.chip==='ina128'?'50':'49,4'} kΩ/RG    vO = G·vd + VREF + vcm·G/CMRR</div>`;
+  const r2=el('div',{class:'reads'});
+  readouts(r2,[{k:'Ganancia G',v:num(G,2)},{k:'vd del puente',v:eng(vd,'V')},{k:'Modo común vcm',v:eng(vcm,'V')},{k:'Error por modo común',v:eng(vcm*G/Math.pow(10,mu.cmrr/20),'V')},
+    {k:'vO',v:eng(vOi,'V'),cls:(vOi<0||vOi>3.3)?'bad':'ok'},{k:'Código ADC 12 bits (0–3,3 V)',v:String(code)+((vOi<0||vOi>3.3)?' (fuera de rango)':'')}]);
+  // acondicionamiento
+  const m=(mu.outMax-mu.outMin)/(mu.inMax-mu.inMin), b=mu.outMin-m*mu.inMin;
+  const kRef= mu.refV!==0? b/mu.refV : NaN;
+  const pos=[], neg=[]; (m>=0?pos:neg).push(['vI',Math.abs(m)]); if(Number.isFinite(kRef)&&kRef!==0) (kRef>0?pos:neg).push(['Vref',Math.abs(kRef)]);
+  const Ap=pos.reduce((a,x)=>a+x[1],0), An=neg.reduce((a,x)=>a+x[1],0); const diff=Ap-(An+1);
+  if(diff>1e-9) neg.push(['RAUX a tierra',diff]); else if(diff<-1e-9) pos.push(['RAUX a tierra',-diff]);
+  const rows=[...pos.map(x=>[x[0],'+',x[1]]),...neg.map(x=>[x[0],'−',x[1]])];
+  const n3=el('div',{class:'note'});
+  n3.innerHTML=`<p><b>Acondicionamiento: llevar el rango del sensor al rango del ADC</b></p><div class="eq">vO = m·vI + b    m = ${num(m,4)}    b = ${eng(b,'V')}</div>
+  <div class="tbl-wrap"><table class="res"><tr><th>Entrada</th><th>Terminal</th><th>Peso</th><th>R = RF/peso</th></tr>${rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${num(r[2],4)}</td><td>${eng(mu.RFc/r[2],'Ω')}</td></tr>`).join('')}</table></div>
+  <p class="status">Diseño balanceado con la regla A+ = A− + 1. Revise que el operacional tenga entrada y salida dentro del rango (riel a riel si el ADC va de 0 a 3,3 V).</p>`;
+  st.append(n1,r1,n2,r2,n3);
+}
+renderers.multi=renderMulti;
+
+/* =====================================================
+   3. OSCILADOR MILLER-SCHMITT
+   ===================================================== */
+const os={R:68e3,C:10e-9,R1:10e3,RF:27e3,VOH:14,VOL:-13,V:0,op:'tl081',pwm:false,vc:1};
+function simOsc(s){
+  const op=OPAMPS[s.op]; const VH=(s.VOH-s.VOL)*s.R1/s.RF;
+  const V1=-s.VOL*s.R1/s.RF, V2=-s.VOH*s.R1/s.RF;
+  if(!(s.V<s.VOH && s.V>s.VOL)) return {err:'V debe quedar entre VOL y VOH para que el integrador cambie de sentido.'};
+  if(V1>s.VOH||V2<s.VOL) return {err:'Los umbrales del Schmitt quedan fuera de la excursión del integrador: aumente RF o reduzca R1.'};
+  const T1=VH*s.R*s.C/(s.VOH-s.V), T2=VH*s.R*s.C/(s.V-s.VOL), T=T1+T2;
+  const dt=T/3000, n=Math.round(12*T/dt);
+  let v1=0, v2=s.VOH; const maxStep=op.SR*dt;
+  const tx=[],a=[],b=[],c=[]; const edges=[]; let prev=v2;
+  for(let i=0;i<n;i++){
+    // integrador: entrada + en V
+    let d=-(v2-s.V)/(s.R*s.C); if(Math.abs(d*dt)>maxStep) d=Math.sign(d)*op.SR; v1=clamp(v1+d*dt,s.VOL,s.VOH);
+    // Schmitt no inversor (entrada − a tierra)
+    const vp=v1*s.RF/(s.RF+s.R1)+v2*s.R1/(s.RF+s.R1); const tg= vp>0? s.VOH:s.VOL; const e=tg-v2; v2+= Math.abs(e)>maxStep? Math.sign(e)*maxStep : e;
+    if(prev<0 && v2>=0 && i*dt>4*T) edges.push(i*dt); prev=v2;
+    if(i*dt>=9*T){ tx.push(i*dt-9*T); a.push(v1); b.push(v2); c.push(v1<s.vc? s.VOH*0.5 : s.VOL*0.5); }
+  }
+  let fm=NaN; if(edges.length>2) fm=(edges.length-1)/(edges[edges.length-1]-edges[0]);
+  let hi=0; for(const v of b) if(v>0) hi++; const D=hi/b.length;
+  let pw=0; for(const v of c) if(v>0) pw++;
+  return {tx,a,b,c,VH,V1,V2,T1,T2,T,fm,D,Dpwm:pw/c.length};
+}
+function renderOsc(){
+  const pane=$('#tab-osc'); if(!pane._ui){ pane._ui=benchLayout(pane,{aria:'Formas de onda del oscilador'});
+    buildControls(pane._ui.rack,[
+      {type:'head',label:'Integrador'},{k:'R',label:'R',unit:'Ω',min:1e3,max:1e6,log:true},{k:'C',label:'C',unit:'F',min:100e-12,max:10e-6,log:true},{k:'V',label:'V en la entrada + del integrador',unit:'V',min:-10,max:10,step:0.01},
+      {type:'head',label:'Schmitt no inversor'},{k:'R1',label:'R1',unit:'Ω',min:1e3,max:1e6,log:true},{k:'RF',label:'RF',unit:'Ω',min:1e3,max:1e6,log:true},
+      {type:'head',label:'Salida del operacional'},{k:'VOH',label:'VOH',unit:'V',min:1,max:17,step:0.1},{k:'VOL',label:'VOL',unit:'V',min:-17,max:-1,step:0.1},
+      {k:'op',type:'select',label:'Integrado (slew rate)',options:Object.entries(OPAMPS).map(([k,v])=>[k,v.name])},
+      {type:'head',label:'Modulador PWM'},{k:'pwm',type:'check',label:'Mostrar PWM (triángulo contra Vcontrol)'},{k:'vc',label:'Vcontrol',unit:'V',min:-10,max:10,step:0.01}
+    ],os,()=>renderOsc(),'os'); }
+  const ui=pane._ui; const r=simOsc(os);
+  if(r.err){ const {ctx,w,h}=setupCanvas(ui.cv); ctx.fillStyle=css('--scope'); ctx.fillRect(0,0,w,h); ctx.fillStyle=css('--ch1'); ctx.font='16px '+css('--sans'); ctx.textAlign='center'; ctx.fillText('No oscila',w/2,h/2-12); ctx.font='13px '+css('--sans'); ctx.fillText(r.err,w/2,h/2+14); readouts(ui.reads,[]); pills(ui.flags,[{t:'Sin oscilación',on:true,cls:'bad'}]); ui.leg.innerHTML=''; return; }
+  const c1=css('--ch1'),c2=css('--ch2'),c3=css('--ch3');
+  const lim=Math.max(os.VOH,-os.VOL)*1.1;
+  const traces=[{x:r.tx,y:r.b,color:c1,width:1.8},{x:r.tx,y:r.a,color:c2,width:2.2}];
+  if(os.pwm) traces.push({x:r.tx,y:r.c,color:c3,width:1.6});
+  drawScope(ui.cv,{xmin:0,xmax:r.tx[r.tx.length-1],ymin:-lim,ymax:lim,traces,hlines:[{y:r.V1,color:c2,label:'V1'},{y:r.V2,color:c2,label:'V2'}].concat(os.pwm?[{y:os.vc,color:c3,label:'Vcontrol'}]:[]),xlabel:'tiempo'});
+  legend(ui.leg,[{c:c1,t:'CH1 vO2 cuadrada (Schmitt)'},{c:c2,t:'CH2 vO1 triangular (integrador)'}].concat(os.pwm?[{c:c3,t:'CH3 PWM (escalado)'}]:[]));
+  const ft=1/r.T;
+  readouts(ui.reads,[{k:'VH = (VOH−VOL)·R1/RF',v:eng(r.VH,'V')},{k:'V1 / V2',v:eng(r.V1,'V')+' / '+eng(r.V2,'V')},{k:'T1 = VH·RC/(VOH−V)',v:eng(r.T1,'s')},{k:'T2 = VH·RC/(V−VOL)',v:eng(r.T2,'s')},
+    {k:'f teórica 1/(T1+T2)',v:eng(ft,'Hz')},{k:'f medida',v:eng(r.fm,'Hz'),cls:Math.abs(r.fm/ft-1)<0.03?'ok':'warn'},{k:'Ciclo útil teórico (V−VOL)/(VOH−VOL)',v:num(100*(os.V-os.VOL)/(os.VOH-os.VOL),1)+' %'},{k:'Ciclo útil medido',v:num(100*r.D,1)+' %'}]
+    .concat(os.pwm?[{k:'Ciclo útil PWM medido',v:num(100*r.Dpwm,1)+' %'}]:[]));
+  const srlim = OPAMPS[os.op].SR < Infinity && (os.VOH-os.VOL)/OPAMPS[os.op].SR > 0.05*r.T;
+  pills(ui.flags,[{t:'Oscilando',on:true,cls:'ok'},{t:'Slew rate deforma la cuadrada',on:srlim,cls:'warn'}]);
+  ui.note.innerHTML=`<p><b>Oscilador Miller-Schmitt</b></p><div class="eq">f = RF/(4·R·C·R1) si V = 0 y VOH = −VOL    Vpp(triángulo) = VH</div><p>Varíe R para cambiar la frecuencia sin tocar la amplitud ni el ciclo útil. V ajusta el ciclo útil pero también cambia la frecuencia. El Schmitt es no inversor: con uno inversor el lazo no oscila.</p>`;
+}
+renderers.osc=renderOsc;
+
+/* =====================================================
+   4. FILTROS ACTIVOS
+   ===================================================== */
+const fl={topo:'skpb',R1:10e3,R2:10e3,R3:1.66e3,RF:100e3,C1:22e-9,C2:11e-9,Cf:1.5e-9,K:1,R:26.5e3,Cn:100e-9,kn:0.9,RQ:79.6e3,Rg:79.6e3,Rt:15.9e3,Ct:10e-9,out:'bp',C:10e-9,ftest:1000};
+const FIL_INFO={
+  pb1:{t:'Pasa bajos de primer orden (inversor)',eq:'H = −(RF/R1)/(1 + jωRF·C)    fc = 1/(2π·RF·C)'},
+  pa1:{t:'Pasa altos de primer orden (inversor)',eq:'H = −(RF/R1)·jωR1C/(1 + jωR1C)    fc = 1/(2π·R1·C)'},
+  skpb:{t:'Sallen-Key pasa bajos',eq:'f0 = 1/(2π√(R1R2C1C2))    Q = √(R1R2C1C2)/[C2(R1+R2) + R1C1(1−K)]'},
+  skpa:{t:'Sallen-Key pasa altos',eq:'f0 = 1/(2π√(R1R2C1C2))    K = 1, C1 = C2: Q = ½√(R2/R1)'},
+  mfb:{t:'Pasa banda de realimentación múltiple',eq:'f0 = (1/2πC)√((R1+R3)/(R1R2R3))    Q = πf0R2C    A0 = −R2/(2R1)'},
+  notch:{t:'Rechaza banda doble T activo',eq:'f0 = 1/(2πRC)    Q = 1/[4(1 − k)]'},
+  tt:{t:'Bicuadrático Tow-Thomas',eq:'f0 = 1/(2πRC)    Q = RQ/R    A(BP) = −RQ/Rg    A(LP) = R/Rg'}
+};
+function filH(s,f){
+  const w=2*Math.PI*f; const sj=C(0,w);
+  switch(s.topo){
+    case 'pb1': return cdiv(cs(-s.RF/s.R1), cadd(cs(1),cmul(sj,cs(s.RF*s.Cf))));
+    case 'pa1': { const x=cmul(sj,cs(s.R1*s.Cf)); return cmul(cs(-s.RF/s.R1), cdiv(x,cadd(cs(1),x))); }
+    case 'skpb': { // nodos X, Y ; vo = K·vY
+      const g1=cs(1/s.R1),g2=cs(1/s.R2),y1=cmul(sj,cs(s.C1)),y2=cmul(sj,cs(s.C2)),K=cs(s.K);
+      const a11=C(-(1/s.R1+1/s.R2)-0, -w*s.C1), a12=cadd(g2,cmul(y1,K)), a21=g2, a22=csub(cs(-1/s.R2),y2);
+      const [x,y]=solve2(a11,a12,a21,a22,cs(-1/s.R1),cs(0)); return cmul(K,y); }
+    case 'skpa': { const y1=cmul(sj,cs(s.C1)),y2=cmul(sj,cs(s.C2)),K=cs(s.K);
+      const a11=C(-1/s.R1,-w*(s.C1+s.C2)), a12=cadd(y2,cs(s.K/s.R1)), a21=y2, a22=csub(cmul(cs(-1),y2),cs(1/s.R2));
+      const [x,y]=solve2(a11,a12,a21,a22,cmul(cs(-1),y1),cs(0)); return cmul(K,y); }
+    case 'mfb': { const yc=cmul(sj,cs(s.C)); // N: (vi−N)/R1 − N/R3 + (vo−N)yc − N·yc = 0 ; vo = −N·yc·R2
+      const den=cadd(cadd(cs(1/s.R1+1/s.R3),cmul(cs(2),yc)), cmul(cmul(yc,yc),cs(s.R2)));
+      const N=cdiv(cs(1/s.R1),den); return cmul(cmul(N,yc),cs(-s.R2)); }
+    case 'notch': { const R=s.R, Cc=s.Cn, k=s.kn; const sc=cmul(sj,cs(Cc));
+      const A=[[C(-2/R,-2*w*Cc), C(0), C(1/R,2*w*Cc*k)],
+               [C(0), C(-2/R,-2*w*Cc), C(2*k/R,w*Cc)],
+               [cs(1/R), sc, C(-1/R,-w*Cc)]];
+      const x=solve3(A,[cs(-1/R),cmul(cs(-1),sc),cs(0)]); return x[2]; }
+    case 'tt': { const x=cmul(sj,cs(s.Rt*s.Ct)); const den=cadd(cadd(cmul(x,x),cmul(x,cs(s.Rt/s.RQ))),cs(1));
+      if(s.out==='bp') return cmul(cs(-s.Rt/s.Rg),cdiv(x,den)); return cdiv(cs(s.Rt/s.Rg),den); }
+  }
+}
+function filTheory(s){
+  const P=Math.PI;
+  switch(s.topo){
+    case 'pb1': return {f0:1/(2*P*s.RF*s.Cf),txt:'fc teórica'};
+    case 'pa1': return {f0:1/(2*P*s.R1*s.Cf),txt:'fc teórica'};
+    case 'skpb': { const m=Math.sqrt(s.R1*s.R2*s.C1*s.C2); return {f0:1/(2*P*m),Q:m/(s.C2*(s.R1+s.R2)+s.R1*s.C1*(1-s.K)),txt:'f0 teórica'}; }
+    case 'skpa': { const m=Math.sqrt(s.R1*s.R2*s.C1*s.C2); return {f0:1/(2*P*m),Q:m/(s.R1*(s.C1+s.C2)+s.R2*s.C2*(1-s.K)),txt:'f0 teórica'}; }
+    case 'mfb': { const f0=1/(2*P*s.C)*Math.sqrt((s.R1+s.R3)/(s.R1*s.R2*s.R3)); return {f0,Q:P*f0*s.R2*s.C,A0:-s.R2/(2*s.R1),txt:'f0 teórica'}; }
+    case 'notch': return {f0:1/(2*P*s.R*s.Cn),Q:1/(4*(1-s.kn)),txt:'f0 teórica'};
+    case 'tt': return {f0:1/(2*P*s.Rt*s.Ct),Q:s.RQ/s.Rt,txt:'f0 teórica'};
+  }
+}
+function renderFil(){
+  const pane=$('#tab-fil');
+  const specs=()=>[
+    {type:'head',label:'Topología'},
+    {k:'topo',type:'select',label:'Filtro',rebuild:true,options:[['pb1','Pasa bajos 1er orden'],['pa1','Pasa altos 1er orden'],['skpb','Sallen-Key pasa bajos'],['skpa','Sallen-Key pasa altos'],['mfb','Pasa banda MFB'],['notch','Rechaza banda doble T'],['tt','Bicuadrático Tow-Thomas']]},
+    {k:'R1',label:'R1',unit:'Ω',min:100,max:10e6,log:true,show:s=>['pb1','pa1','skpb','skpa','mfb'].includes(s.topo)},
+    {k:'R2',label:'R2',unit:'Ω',min:100,max:10e6,log:true,show:s=>['skpb','skpa','mfb'].includes(s.topo)},
+    {k:'R3',label:'R3',unit:'Ω',min:10,max:10e6,log:true,show:s=>s.topo==='mfb'},
+    {k:'RF',label:'RF',unit:'Ω',min:100,max:10e6,log:true,show:s=>['pb1','pa1'].includes(s.topo)},
+    {k:'Cf',label:'C',unit:'F',min:1e-12,max:100e-6,log:true,show:s=>['pb1','pa1'].includes(s.topo)},
+    {k:'C1',label:'C1',unit:'F',min:1e-12,max:100e-6,log:true,show:s=>['skpb','skpa'].includes(s.topo)},
+    {k:'C2',label:'C2',unit:'F',min:1e-12,max:100e-6,log:true,show:s=>['skpb','skpa'].includes(s.topo)},
+    {k:'K',label:'Ganancia K del amplificador',unit:'V/V',min:1,max:2.9,step:0.001,show:s=>['skpb','skpa'].includes(s.topo)},
+    {k:'C',label:'C (ambos iguales)',unit:'F',min:1e-12,max:100e-6,log:true,show:s=>s.topo==='mfb'},
+    {k:'R',label:'R',unit:'Ω',min:100,max:10e6,log:true,show:s=>s.topo==='notch'},
+    {k:'Cn',label:'C',unit:'F',min:1e-12,max:100e-6,log:true,show:s=>s.topo==='notch'},
+    {k:'kn',label:'k (fracción realimentada)',unit:'',min:0,max:0.98,step:0.01,show:s=>s.topo==='notch'},
+    {k:'Rt',label:'R',unit:'Ω',min:100,max:10e6,log:true,show:s=>s.topo==='tt'},
+    {k:'Ct',label:'C',unit:'F',min:1e-12,max:100e-6,log:true,show:s=>s.topo==='tt'},
+    {k:'RQ',label:'RQ',unit:'Ω',min:100,max:10e6,log:true,show:s=>s.topo==='tt'},
+    {k:'Rg',label:'Rg',unit:'Ω',min:100,max:10e6,log:true,show:s=>s.topo==='tt'},
+    {k:'out',type:'select',label:'Salida',options:[['bp','Pasa banda (A1)'],['lp','Pasa bajos (A2)']],show:s=>s.topo==='tt'},
+    {type:'head',label:'Prueba'},
+    {k:'ftest',label:'Frecuencia de prueba',unit:'Hz',min:0.1,max:10e6,log:true}
+  ];
+  if(!pane._ui){ pane._ui=benchLayout(pane,{aria:'Diagrama de Bode'}); }
+  const ui=pane._ui; if(!ui._built){ buildControls(ui.rack,specs(),fl,(rb)=>{ if(rb) ui._built=false; renderFil(); },'fl'); ui._built=true; }
+  const th=filTheory(fl); const f0=th.f0;
+  const fmin=Math.max(0.01,f0/300), fmax=Math.min(1e8,f0*300); const N=700;
+  const fx=[],mag=[],ph=[];
+  for(let i=0;i<N;i++){ const f=fmin*Math.pow(fmax/fmin,i/(N-1)); const H=filH(fl,f); fx.push(f); mag.push(20*Math.log10(Math.max(cabs(H),1e-9))); ph.push(carg(H)*180/Math.PI); }
+  let pk=-Infinity, pki=0; mag.forEach((v,i)=>{ if(v>pk){pk=v;pki=i;} });
+  let mn=Infinity, mni=0; mag.forEach((v,i)=>{ if(v<mn){mn=v;mni=i;} });
+  const ref = fl.topo==='notch'? mag[0] : pk;
+  const cross=[]; for(let i=1;i<N;i++){ const a=mag[i-1]-(ref-3), b=mag[i]-(ref-3); if(a*b<0){ const t=a/(a-b); cross.push(fx[i-1]*Math.pow(fx[i]/fx[i-1],t)); } }
+  const ymax=Math.ceil((pk+6)/10)*10, ymin=Math.max(ymax-90, Math.floor((Math.min(...mag)-5)/10)*10);
+  const c1=css('--ch1'),c2=css('--ch2'),c3=css('--ch3');
+  const phs=ph.map(p=>ymin+(p+180)/360*(ymax-ymin));
+  const Ht=filH(fl,fl.ftest);
+  drawScope(ui.cv,{xmin:fmin,xmax:fmax,ymin,ymax,logx:true,yunit:'dB',yfmt:v=>num(v,0)+' dB',traces:[{x:fx,y:phs,color:c2,width:1.4,dash:[5,4]},{x:fx,y:mag,color:c1,width:2.4}],
+    hlines:[{y:ref-3,color:c3,label:'−3 dB'}],vlines:[{x:f0,color:'#8FA3B0',label:'f0'},{x:fl.ftest,color:c3,label:'prueba'}],xlabel:'frecuencia (escala log)'});
+  legend(ui.leg,[{c:c1,t:'|H| en dB (eje izquierdo)'},{c:c2,t:'fase: de −180° (abajo) a +180° (arriba)'}]);
+  const items=[{k:th.txt,v:eng(f0,'Hz')}];
+  if(th.Q!==undefined) items.push({k:'Q teórico',v:num(th.Q,3)});
+  if(th.A0!==undefined) items.push({k:'A0 teórica',v:num(th.A0,3)});
+  items.push({k:'Ganancia máxima',v:num(pk,2)+' dB ('+num(Math.pow(10,pk/20),3)+')'});
+  if(['pb1','pa1','skpb','skpa'].includes(fl.topo)||(fl.topo==='tt'&&fl.out==='lp')) items.push({k:'fc medida (−3 dB)',v:cross.length?eng(cross[0],'Hz'):'—'});
+  if(fl.topo==='mfb'||(fl.topo==='tt'&&fl.out==='bp')){ if(cross.length>=2){ items.push({k:'Ancho de banda medido',v:eng(cross[1]-cross[0],'Hz')},{k:'Q medido f0/BW',v:num(fx[pki]/(cross[1]-cross[0]),3)}); } items.push({k:'f del pico',v:eng(fx[pki],'Hz')}); }
+  if(fl.topo==='notch'){ items.push({k:'Mínimo (rechazo)',v:num(mn,1)+' dB en '+eng(fx[mni],'Hz')}); if(cross.length>=2) items.push({k:'Ancho de rechazo a −3 dB',v:eng(cross[1]-cross[0],'Hz')}); }
+  items.push({k:'|H| en f de prueba',v:num(cabs(Ht),4)+' ('+num(20*Math.log10(cabs(Ht)),2)+' dB)'},{k:'Fase en f de prueba',v:num(carg(Ht)*180/Math.PI,1)+'°'});
+  readouts(ui.reads,items);
+  const qv=th.Q; pills(ui.flags,[{t:'Butterworth (Q ≈ 0,707)',on:['skpb','skpa'].includes(fl.topo)&&Math.abs(qv-0.7071)<0.02,cls:'ok'},{t:'Inestable (K ≥ 3)',on:['skpb','skpa'].includes(fl.topo)&&qv<0,cls:'bad'},{t:'Pico de resonancia',on:['skpb','skpa'].includes(fl.topo)&&qv>0.75,cls:'warn'}]);
+  const info=FIL_INFO[fl.topo]; ui.note.innerHTML=`<p><b>${info.t}</b></p><div class="eq">${info.eq}</div><p>La respuesta se calcula resolviendo las ecuaciones de nodos del circuito con un operacional ideal. Con un integrado real, el GBW debe superar con holgura la ganancia por la frecuencia de interés.</p>`;
+}
+renderers.fil=renderFil;
+
+/* =====================================================
+   5. FUENTES PRIMARIAS Y REGULADORES LINEALES
+   ===================================================== */
+const sp={vrms:12,fred:60,red:0,rect:'puente',vd:0.8,Cap:4700e-6,load:'I',IO:1,RL:12,reg:'none',
+  Rz:82,VZ:6.2,rZ:5,IZK:1e-3,Rb:1000,VZs:5.6,beta:50,RS:1000,fix:5,R1l:240,R2l:720};
+function regulate(s,vin){
+  const IL=v=> s.load==='I'? s.IO : v/s.RL;
+  if(s.reg==='none'){ const io=IL(vin); return {vo:vin,iin:io,pd:{},flag:''}; }
+  if(s.reg==='zener'){
+    const R=s.Rz; let vOff = s.load==='I'? vin-s.IO*R : vin*s.RL/(R+s.RL);
+    if(vOff<=s.VZ){ const io=IL(vOff); return {vo:vOff,iin:(vin-vOff)/R,pd:{R:(vin-vOff)**2/R,Z:0},IZ:0,flag:'zener'}; }
+    let vo; if(s.load==='I') vo=(vin/R+s.VZ/s.rZ-s.IO)/(1/R+1/s.rZ); else vo=(vin/R+s.VZ/s.rZ)/(1/R+1/s.rZ+1/s.RL);
+    const IZ=(vo-s.VZ)/s.rZ; return {vo,iin:(vin-vo)/R,pd:{R:(vin-vo)**2/R,Z:vo*IZ},IZ,flag: IZ<s.IZK?'zener':''};
+  }
+  if(s.reg==='serie'){
+    let vo=s.VZs-0.65, flag='';
+    for(let k=0;k<3;k++){ const IO2=IL(vo)+vo/s.RS; const IB=IO2/(s.beta+1);
+      const R=s.Rb; let vB; const vOff=vin-IB*R;
+      if(vOff<=s.VZs){ vB=vOff; flag='zener'; } else { vB=(vin/R+s.VZs/s.rZ-IB)/(1/R+1/s.rZ); }
+      vo=Math.min(vB-0.65, vin-0.3); if(vin-0.3<vB-0.65) flag='dropout'; }
+    const IO2=IL(vo)+vo/s.RS; const IB=IO2/(s.beta+1); const vB=vo+0.65; const IR=(vin-vB)/s.Rb; const IZ=Math.max(IR-IB,0);
+    return {vo,iin:IO2-IB+IR,pd:{Q:(vin-vo)*(IO2-IB),R:IR*IR*s.Rb,Z:vB*IZ,RS:vo*vo/s.RS},IZ,flag};
+  }
+  const Vn = s.reg==='78xx'? s.fix : 1.25*(1+s.R2l/s.R1l)+50e-6*s.R2l;
+  const vdo = s.reg==='78xx'? 2.0 : 2.5; const iq= s.reg==='78xx'? 0.005 : 1.25/s.R1l+50e-6;
+  let vo=Vn*(1+1e-4*(vin-Vn-vdo)), flag=''; if(vin-vdo<Vn){ vo=Math.max(vin-vdo,0); flag='dropout'; }
+  const io=IL(vo); vo-=0.01*io; return {vo,iin:io+iq,pd:{Q:(vin-vo)*io+vin*iq},flag,Vn};
+}
+function simSupply(s){
+  const f=s.fred, T=1/f, Vm=s.vrms*Math.SQRT2*(1+s.red/100);
+  const nd= s.rect==='puente'?2:1; const kf= s.rect==='media'?1:2;
+  const dt=T/4000, ncy=10, n=ncy*4000;
+  let vc=Vm-nd*s.vd; const tx=[],vr=[],vcv=[],vov=[];
+  let cond=0, condTot=0; let Pin=0,Pout=0,Pq=0,cnt=0; const pdSum={}; let flags=new Set(); let IZmin=Infinity;
+  for(let i=0;i<n;i++){
+    const t=i*dt; const vs=Vm*Math.sin(2*Math.PI*f*t);
+    let r= s.rect==='media'? (vs>s.vd? vs-s.vd : 0) : Math.max(Math.abs(vs)-nd*s.vd,0);
+    const rg=regulate(s,vc);
+    if(r>=vc){ vc=r; if(i>=(ncy-3)*4000) condTot+=dt; }
+    else { vc-= rg.iin*dt/s.Cap; if(vc<0) vc=0; }
+    if(i>=(ncy-3)*4000){
+      const g=regulate(s,vc); tx.push(t-(ncy-3)*T); vr.push(r); vcv.push(vc); vov.push(g.vo);
+      const io= s.load==='I'? s.IO : g.vo/s.RL; Pout+=g.vo*io; Pin+=vc*g.iin; cnt++;
+      for(const k in g.pd) pdSum[k]=(pdSum[k]||0)+g.pd[k]; if(g.flag) flags.add(g.flag); if(g.IZ!==undefined) IZmin=Math.min(IZmin,g.IZ);
+    }
+  }
+  const sc=stats(vcv), so=stats(vov);
+  for(const k in pdSum) pdSum[k]/=cnt;
+  return {tx,vr,vcv,vov,Vm,V1:sc.max,V2:sc.min,VRPP:sc.pp,Vdc:sc.mean,VO:so.mean,VOrip:so.pp,T1:condTot/(3*kf),T,kf,Pout:Pout/cnt,Pin:Pin/cnt,pd:pdSum,flags,IZmin,nd};
+}
+let lastReg=null;
+function renderSrc(){
+  const pane=$('#tab-src');
+  const specs=()=>[
+    {type:'head',label:'Fuente primaria'},
+    {k:'vrms',label:'Secundario',unit:'Vrms',min:3,max:40,step:0.1},{k:'fred',label:'Frecuencia de red',unit:'Hz',min:50,max:60,step:10},
+    {k:'red',label:'Variación de la red',unit:'%',min:-20,max:20,step:1},
+    {k:'rect',type:'select',label:'Rectificador',options:[['puente','Onda completa en puente'],['tap','Onda completa con derivación central'],['media','Media onda']]},
+    {k:'vd',label:'VD por diodo',unit:'V',min:0,max:1.2,step:0.05},{k:'Cap',label:'Condensador de filtro',unit:'F',min:1e-6,max:47e-3,log:true},
+    {type:'head',label:'Carga'},
+    {k:'load',type:'select',label:'Tipo de carga',rebuild:true,options:[['I','Corriente constante'],['R','Resistiva']]},
+    {k:'IO',label:'IO',unit:'A',min:0,max:3,step:0.001,show:s=>s.load==='I'},{k:'RL',label:'RL',unit:'Ω',min:1,max:100e3,log:true,show:s=>s.load==='R'},
+    {type:'head',label:'Regulador'},
+    {k:'reg',type:'select',label:'Etapa reguladora',rebuild:true,options:[['none','Ninguno (fuente primaria)'],['zener','Paralelo con zener'],['serie','Serie con transistor'],['78xx','78xx fijo'],['lm317','LM317 ajustable']]},
+    {k:'Rz',label:'R serie',unit:'Ω',min:1,max:100e3,log:true,show:s=>s.reg==='zener'},
+    {k:'VZ',label:'VZ',unit:'V',min:2.4,max:30,step:0.1,show:s=>s.reg==='zener'},
+    {k:'rZ',label:'rZ (resistencia dinámica)',unit:'Ω',min:0.5,max:50,step:0.5,show:s=>s.reg==='zener'},
+    {k:'IZK',label:'IZK',unit:'A',min:0.1e-3,max:20e-3,log:true,show:s=>s.reg==='zener'},
+    {k:'Rb',label:'R (a la base)',unit:'Ω',min:10,max:100e3,log:true,show:s=>s.reg==='serie'},
+    {k:'VZs',label:'VZ de referencia',unit:'V',min:2.4,max:30,step:0.1,show:s=>s.reg==='serie'},
+    {k:'beta',label:'β mínimo',unit:'',min:10,max:500,step:1,show:s=>s.reg==='serie'},
+    {k:'RS',label:'RS (sangría)',unit:'Ω',min:100,max:100e3,log:true,show:s=>s.reg==='serie'},
+    {k:'fix',label:'Salida del 78xx',unit:'V',min:5,max:24,step:1,show:s=>s.reg==='78xx'},
+    {k:'R1l',label:'R1 (OUT a ADJ)',unit:'Ω',min:100,max:1000,log:true,show:s=>s.reg==='lm317'},
+    {k:'R2l',label:'R2 (ADJ a tierra)',unit:'Ω',min:0,max:10e3,step:1,show:s=>s.reg==='lm317'}
+  ];
+  if(!pane._ui){ pane._ui=benchLayout(pane,{aria:'Formas de onda de la fuente'}); const extra=el('div',{class:'note'}); extra.innerHTML='<div class="row"><button class="btn" type="button" id="btn-reg">Medir regulación de línea y de carga</button><span class="status" id="reg-out">Corre tres simulaciones: nominal, red −10 % y sin carga.</span></div>'; pane._ui.stage.appendChild(extra);
+    $('#btn-reg',extra).addEventListener('click',()=>{ const base=simSupply(sp); const low=simSupply({...sp,red:sp.red-10}); const nl=simSupply({...sp,IO:0,RL:1e9});
+      const line=((base.VO-low.VO)/base.VO)/(10/(100+sp.red))*100; const load=(nl.VO-base.VO)/base.VO*100;
+      $('#reg-out').textContent=`Regulación de línea: ${num(line,1)} %  ·  Regulación de carga: ${num(load,2)} %  (VO nominal ${num(base.VO,3)} V, red −10 %: ${num(low.VO,3)} V, sin carga: ${num(nl.VO,3)} V)`; }); }
+  const ui=pane._ui; if(!ui._built){ buildControls(ui.rack,specs(),sp,(rb)=>{ if(rb) ui._built=false; renderSrc(); },'sp'); ui._built=true; }
+  const r=simSupply(sp);
+  const c1=css('--ch1'),c2=css('--ch2'),c3=css('--ch3');
+  const ymax=Math.ceil(r.Vm*1.1);
+  const traces=[{x:r.tx,y:r.vr,color:c1,width:1.4,dash:[5,4]},{x:r.tx,y:r.vcv,color:c2,width:2.2}];
+  if(sp.reg!=='none') traces.push({x:r.tx,y:r.vov,color:c3,width:2.2});
+  drawScope(ui.cv,{xmin:0,xmax:r.tx[r.tx.length-1],ymin:0,ymax,traces,xlabel:'tiempo (3 ciclos de red)'});
+  legend(ui.leg,[{c:c1,t:'CH1 rectificada sin filtro'},{c:c2,t:'CH2 condensador (fuente primaria)'}].concat(sp.reg!=='none'?[{c:c3,t:'CH3 salida regulada'}]:[]));
+  const IOv= sp.load==='I'? sp.IO : r.VO/sp.RL;
+  const T2=r.T/r.kf-r.T1; const approx=(sp.load==='I'?sp.IO:r.Vdc/sp.RL)/(r.kf*sp.fred*sp.Cap);
+  const piv= sp.rect==='tap'? 2*r.Vm : r.Vm;
+  const items=[{k:'Vm del secundario',v:eng(r.Vm,'V')},{k:'V1 (pico del condensador)',v:eng(r.V1,'V')},{k:'V2 (valle)',v:eng(r.V2,'V')},{k:'VRPP medido',v:eng(r.VRPP,'V')},
+    {k:'Aproximación IO/(k·f·C)',v:eng(approx,'V')},{k:'Rizado %',v:num(100*r.VRPP/r.Vdc,1)+' %'},{k:'T1 conducción por pulso',v:eng(r.T1,'s')},{k:'T2 descarga',v:eng(T2,'s')},{k:'PIV por diodo',v:eng(piv,'V')},{k:'Corriente media por diodo',v:eng((r.Pin/Math.max(r.Vdc,1e-9))/(sp.rect==='media'?1:2),'A')}];
+  if(sp.reg!=='none'){
+    items.push({k:'VO regulado (promedio)',v:eng(r.VO,'V')},{k:'Rizado de salida',v:eng(r.VOrip,'V')},{k:'Rechazo de rizado',v: r.VOrip>1e-6? num(20*Math.log10(r.VRPP/r.VOrip),1)+' dB':'> 120 dB'},
+      {k:'Potencia en la carga',v:eng(r.Pout,'W')},{k:'Eficiencia del regulador',v:num(100*r.Pout/r.Pin,1)+' %'});
+    const names={R:'Potencia en R',Z:'Potencia en el zener',Q:'Potencia en el transistor/regulador',RS:'Potencia en RS'};
+    for(const k in r.pd) items.push({k:names[k],v:eng(r.pd[k],'W')});
+    if(r.IZmin!==Infinity) items.push({k:'IZ mínima',v:eng(r.IZmin,'A'),cls:(sp.reg==='zener'&&r.IZmin<sp.IZK)?'bad':'ok'});
+    if(sp.reg==='lm317') items.push({k:'VO nominal 1,25(1+R2/R1)+IADJ·R2',v:eng(1.25*(1+sp.R2l/sp.R1l)+50e-6*sp.R2l,'V')});
+  } else items.push({k:'Potencia entregada',v:eng(r.Pin,'W')});
+  readouts(ui.reads,items);
+  pills(ui.flags,[{t:'Regulador sin margen (dropout)',on:r.flags.has('dropout'),cls:'bad'},{t:'Zener fuera de ruptura (IZ < IZK)',on:r.flags.has('zener'),cls:'bad'},{t:'Rizado mayor al 10 %',on:r.VRPP/r.Vdc>0.1,cls:'warn'},{t:'Regulación correcta',on:sp.reg!=='none'&&r.flags.size===0,cls:'ok'}]);
+  ui.note.innerHTML=`<p><b>Fuente primaria normal con regulador lineal</b></p><div class="eq">VRPP = IO·T2/C    Vm = √2·Vs    rizado % = VRPP/VO·100    η ≈ VO/VI</div><p>El condensador solo se carga durante T1, cerca del pico; el resto del tiempo (T2) entrega la corriente de carga. Use el botón para medir regulación de línea y de carga con las definiciones de Gabriunas.</p>`;
+}
+renderers.src=renderSrc;
+
+/* =====================================================
+   6. CONVERSORES CONMUTADOS
+   ===================================================== */
+const sw={topo:'buck',VI:12,D:0.4167,fs:100e3,L:47e-6,Cs:100e-6,IO:1};
+function simSw(s){
+  const T=1/s.fs, spc=400, dt=T/spc; const D=clamp(s.D,0.01,0.95);
+  const Vid= s.topo==='buck'? D*s.VI : s.topo==='boost'? s.VI/(1-D) : s.VI*D/(1-D);
+  const R= Vid/Math.max(s.IO,1e-6);
+  let v=Vid, iL= s.topo==='buck'? s.IO : s.IO/(1-D);
+  let lastAvg=0; const maxC=4000; let c=0; let dcm=false;
+  const rec={t:[],i:[],v:[],g:[]};
+  for(c=0;c<maxC;c++){
+    let sum=0; const keep = false;
+    for(let k=0;k<spc;k++){
+      const on=k<D*spc; let vL, ic;
+      if(s.topo==='buck'){ if(on){ vL=s.VI-v; ic=iL-v/R; } else { vL= iL>0? -v:0; ic=Math.max(iL,0)-v/R; } }
+      else { if(on){ vL=s.VI; ic=-v/R; } else { vL= iL>0? (s.topo==='boost'? s.VI-v : -v) : 0; ic=(iL>0?iL:0)-v/R; } }
+      iL+=vL/s.L*dt; if(iL<0){ iL=0; dcm=true; }
+      v+=ic/s.Cs*dt; sum+=v;
+    }
+    const avg=sum/spc; if(c>50 && Math.abs(avg-lastAvg)<1e-6*Math.max(1,Math.abs(avg))) break; lastAvg=avg; if(c===50) dcm=false;
+  }
+  dcm=false; let imin=Infinity,imax=-Infinity,vmin=Infinity,vmax=-Infinity;
+  for(let cy=0;cy<4;cy++) for(let k=0;k<spc;k++){
+    const on=k<D*spc; let vL,ic;
+    if(s.topo==='buck'){ if(on){ vL=s.VI-v; ic=iL-v/R; } else { vL= iL>0? -v:0; ic=Math.max(iL,0)-v/R; } }
+    else { if(on){ vL=s.VI; ic=-v/R; } else { vL= iL>0? (s.topo==='boost'? s.VI-v : -v) : 0; ic=(iL>0?iL:0)-v/R; } }
+    iL+=vL/s.L*dt; if(iL<0){ iL=0; dcm=true; } v+=ic/s.Cs*dt;
+    rec.t.push((cy*spc+k)*dt); rec.i.push(iL); rec.v.push(s.topo==='inv'?-v:v); rec.g.push(on?1:0);
+    imin=Math.min(imin,iL); imax=Math.max(imax,iL); vmin=Math.min(vmin,v); vmax=Math.max(vmax,v);
+  }
+  return {rec,Vid,R,dI:imax-imin,dV:vmax-vmin,vavg:(vmax+vmin)/2,imin,imax,dcm,cycles:c,D};
+}
+function renderSw(){
+  const pane=$('#tab-sw');
+  if(!pane._ui){ pane._ui=benchLayout(pane,{aria:'Corriente en la bobina y voltaje de salida'});
+    buildControls(pane._ui.rack,[
+      {type:'head',label:'Conversor'},{k:'topo',type:'select',label:'Topología',options:[['buck','Directo (reductor, buck)'],['boost','Indirecto elevador (boost)'],['inv','Indirecto inversor (buck-boost)']]},
+      {k:'VI',label:'VI',unit:'V',min:1,max:60,step:0.1},{k:'D',label:'Ciclo útil D',unit:'',min:0.02,max:0.95,step:0.0001},
+      {k:'fs',label:'Frecuencia de conmutación',unit:'Hz',min:10e3,max:1e6,log:true},{k:'L',label:'L',unit:'H',min:1e-6,max:10e-3,log:true},{k:'Cs',label:'C de salida',unit:'F',min:1e-6,max:4.7e-3,log:true},
+      {k:'IO',label:'Corriente de carga IO',unit:'A',min:0.01,max:10,step:0.01}
+    ],sw,()=>renderSw(),'sw'); }
+  const ui=pane._ui; const r=simSw(sw);
+  const c1=css('--ch1'),c2=css('--ch2'),c3=css('--ch3');
+  const imax=Math.max(r.imax*1.25,0.1);
+  const vabs=Math.abs(r.Vid);
+  // dos escalas: corriente en A arriba, voltaje AC abajo (normalizados a la misma pantalla)
+  const vacc=r.rec.v.map(x=>x-(sw.topo==='inv'?-r.vavg:r.vavg)); const vs=Math.max(Math.max(...vacc.map(Math.abs))*1.3,1e-6);
+  const yI=r.rec.i.map(i=>i/imax*10), yV=vacc.map(x=>-5+x/vs*4), yG=r.rec.g.map(g=>g? -9:-10);
+  drawScope(ui.cv,{xmin:0,xmax:r.rec.t[r.rec.t.length-1],ymin:-10.5,ymax:10.5,yfmt:v=>'',traces:[{x:r.rec.t,y:yG,color:c3,width:1.6},{x:r.rec.t,y:yV,color:c2,width:2},{x:r.rec.t,y:yI,color:c1,width:2.2}],xlabel:'tiempo (4 periodos)'});
+  legend(ui.leg,[{c:c1,t:`CH1 iL (0 a ${eng(imax,'A')} en la mitad superior)`},{c:c2,t:`CH2 rizado de vO (±${eng(vs,'V')})`},{c:c3,t:'CH3 compuerta del interruptor'}]);
+  const D=r.D, f=sw.fs, L=sw.L, Cc=sw.Cs, VI=sw.VI, IO=sw.IO;
+  let dIt, dVt, ftxt;
+  if(sw.topo==='buck'){ dIt=(VI-r.Vid)*D/(L*f); dVt=dIt/(8*f*Cc); ftxt='VO = D·VI    ΔIL = (VI−VO)·D/(L·f)    ΔVO = ΔIL/(8·f·C)'; }
+  else { dIt=VI*D/(L*f); dVt=IO*D/(f*Cc); ftxt= sw.topo==='boost'? 'VO = VI/(1−D)    ΔIL = VI·D/(L·f)    ΔVO = IO·D/(f·C)' : 'VO = −VI·D/(1−D)    ΔIL = VI·D/(L·f)    ΔVO = IO·D/(f·C)'; }
+  readouts(ui.reads,[{k:'VO ideal',v:eng(sw.topo==='inv'?-r.Vid:r.Vid,'V')},{k:'VO simulado (promedio)',v:eng(sw.topo==='inv'?-r.vavg:r.vavg,'V')},{k:'Carga equivalente',v:eng(r.R,'Ω')},
+    {k:'ΔIL teórico',v:eng(dIt,'A')},{k:'ΔIL simulado',v:eng(r.dI,'A')},{k:'ΔVO teórico',v:eng(dVt,'V')},{k:'ΔVO simulado',v:eng(r.dV,'V')},{k:'iL mínima',v:eng(r.imin,'A')}]);
+  pills(ui.flags,[{t:'Conducción continua (CCM)',on:!r.dcm,cls:'ok'},{t:'Conducción discontinua: las fórmulas ideales no aplican',on:r.dcm,cls:'warn'}]);
+  ui.note.innerHTML=`<p><b>Conversor ${sw.topo==='buck'?'directo':sw.topo==='boost'?'indirecto elevador':'indirecto inversor'} ideal</b></p><div class="eq">${ftxt}</div><p>Interruptor, diodo y bobina ideales. Para pasar de un VO deseado a D use la ecuación de la izquierda. Si iL llega a cero dentro del periodo, el conversor entra en modo discontinuo y VO sube respecto al valor ideal.</p>`;
+}
+renderers.sw=renderSw;
+
+/* =====================================================
+   7. ACTIVIDAD PRÁCTICA
+   ===================================================== */
+const EX=[
+ {id:1,tema:'Amplificador no inversor',txt:'Diseñe un amplificador no inversor de ganancia 11 con R1 = 10 kΩ, alimentado con ±12 V y margen de salida de 1,5 V (VOH = +10,5 V). a) Calcule RF. b) Calcule la amplitud pico máxima de entrada sin recorte. c) Calcule la resistencia de balance en la entrada +.',f:['RF','Amplitud máxima de entrada (V pico)','R+ de balance'],go:()=>preset('amp',amp,{circuit:'noinv',R1:10e3,RF:10e3,vcc:12,drop:1.5,op:'ideal',A:0.5,f:1000,wave:'seno',off:0,noise:0})},
+ {id:2,tema:'Amplificador inversor',txt:'Se necesita un inversor con ganancia −4,7 e impedancia de entrada de 22 kΩ. a) Calcule R1 y RF exactos. b) Elija RF comercial de la serie E12 y recalcule la ganancia. c) Calcule R+ para balancear con el valor comercial.',f:['R1','RF exacta','RF comercial','Ganancia con RF comercial','R+ de balance'],go:()=>preset('amp',amp,{circuit:'inversor',R1:22e3,RF:22e3,op:'ideal',vcc:15,drop:1.5,A:1,f:1000,wave:'seno',off:0,noise:0})},
+ {id:3,tema:'Slew rate',txt:'Un amplificador debe entregar 5 V pico senoidales. a) ¿Cuál es la frecuencia máxima sin deformación por slew rate con un LM741 (0,5 V/µs)? b) ¿Y con un TL081 (13 V/µs)? c) Verifique en el simulador con un no inversor de ganancia 5 (R1 = 10 kΩ, RF = 40 kΩ) y 1 Vp de entrada.',f:['fp con LM741','fp con TL081'],go:()=>preset('amp',amp,{circuit:'noinv',R1:10e3,RF:40e3,op:'lm741',vcc:15,drop:1.5,A:1,f:1000,wave:'seno',off:0,noise:0})},
+ {id:4,tema:'Multientradas universal',txt:'Diseñe vO = 5·v1 − 2·v2 con v1 en la entrada no inversora, RF = 100 kΩ y circuito balanceado. Use la regla A+ = A− + 1 para decidir si falta una resistencia auxiliar, dónde va y cuánto vale. Entregue R de v1, R de v2, RAUX y verifique R+ = R−.',f:['R de v1 (entrada +)','R de v2 (entrada −)','RAUX: valor y entrada','R+ y R−'],go:()=>preset('multi',mu,{v1:0,R1:0,v2:0,R2:0,v3:0,R3:0,v4:0,R4:0,RauxN:0,RauxP:0,RF:100e3})},
+ {id:5,tema:'Schmitt no inversor',txt:'Con ±15 V (VOH = +13,5 V, VOL = −13,5 V) diseñe un Schmitt no inversor con V1 = +2 V y V2 = −1 V usando R1 = 10 kΩ. Calcule RF y el voltaje de referencia V en la entrada −.',f:['RF','V (referencia)','VH'],go:()=>preset('amp',amp,{circuit:'schmittni',R1:10e3,RF:100e3,Vth:0,vcc:15,drop:1.5,op:'ideal',wave:'triangular',A:5,f:100,off:0,noise:0,xy:true})},
+ {id:6,tema:'Schmitt inversor',txt:'Con las mismas fuentes, diseñe un Schmitt inversor con V1 = +3 V y V2 = +1 V. Tome RF = 125 kΩ. a) Calcule R1 (Thevenin del divisor) y V. b) Implemente V y R1 con un divisor RA–RB desde +15 V.',f:['R1','V','RA (a +15 V)','RB (a tierra)'],go:()=>preset('amp',amp,{circuit:'schmittinv',R1:10e3,RF:125e3,Vth:0,vcc:15,drop:1.5,op:'ideal',wave:'triangular',A:6,f:100,off:2,noise:0,xy:true})},
+ {id:7,tema:'Oscilador Miller-Schmitt',txt:'Con VOH = +13,5 V, VOL = −13,5 V y V = 0, diseñe un oscilador que entregue un triángulo de 6 Vpp a 2 kHz. Use C = 10 nF y R1 = 10 kΩ. Calcule RF y R. Verifique la frecuencia y la amplitud en el simulador.',f:['RF','R','Umbrales V1 y V2'],go:()=>preset('osc',os,{C:10e-9,R1:10e3,RF:27e3,R:68e3,VOH:13.5,VOL:-13.5,V:0,op:'ideal'})},
+ {id:8,tema:'Sallen-Key pasa bajos',txt:'Diseñe un Sallen-Key pasa bajos de ganancia unitaria (K = 1), Butterworth, con fc = 2 kHz y R1 = R2 = 10 kΩ. Calcule C1 y C2 y verifique fc y Q en el diagrama de Bode.',f:['C1','C2','Q'],go:()=>preset('fil',fl,{topo:'skpb',R1:10e3,R2:10e3,K:1,C1:10e-9,C2:10e-9,ftest:2000})},
+ {id:9,tema:'Pasa banda MFB',txt:'Diseñe un pasa banda de realimentación múltiple con f0 = 500 Hz, Q = 4, ganancia en el centro A0 = −1 y C = 22 nF. Calcule R1, R2 y R3 y el ancho de banda.',f:['R1','R2','R3','Ancho de banda'],go:()=>preset('fil',fl,{topo:'mfb',C:22e-9,R1:10e3,R2:100e3,R3:1e3,ftest:500})},
+ {id:10,tema:'Fuente primaria y LM317',txt:'Un transformador de 15 Vrms alimenta un puente (0,8 V por diodo) y una carga de 0,5 A constantes a 60 Hz. a) Calcule Vm y V1. b) Elija C para un rizado máximo de 1 Vpp (aproximación y valor comercial). c) Diseñe un LM317 de 12 V con R1 = 240 Ω y estime su potencia disipada.',f:['Vm','V1','C (cálculo)','C comercial','R2 del LM317','Potencia en el LM317'],go:()=>preset('src',sp,{vrms:15,fred:60,red:0,rect:'puente',vd:0.8,load:'I',IO:0.5,reg:'none',Cap:1000e-6,R1l:240,R2l:720})},
+ {id:11,tema:'Regulador paralelo con zener',txt:'Diseñe un regulador con zener de 5,1 V (IZK = 1 mA) para una carga de 0 a 20 mA, con VI entre 9 y 11 V. Calcule R máxima, el valor comercial y las potencias del zener y de R en el peor caso.',f:['R máxima','R comercial','Potencia en el zener','Potencia en R'],go:()=>preset('src',sp,{vrms:7.4,rect:'puente',vd:0.8,Cap:4700e-6,load:'I',IO:0.02,reg:'zener',VZ:5.1,IZK:1e-3,rZ:5,Rz:330})},
+ {id:12,tema:'Conversor reductor',txt:'Diseñe un conversor directo de 24 V a 5 V para 2 A, a 50 kHz. El rizado de corriente en la bobina debe ser como máximo 30 % de IO y el rizado de salida como máximo 20 mVpp. Calcule D, L mínima y C mínima.',f:['D','L mínima','C mínima'],go:()=>preset('sw',sw,{topo:'buck',VI:24,D:0.5,fs:50e3,L:47e-6,Cs:22e-6,IO:2})}
+];
+function preset(tab,obj,vals){ Object.assign(obj,vals); const pane=$('#tab-'+tab); if(pane._ui){ pane._ui._built=false; if(tab==='multi'||tab==='osc'||tab==='sw'){ pane._ui=null; } } showTab(tab); window.scrollTo({top:0}); }
+function loadAns(){ try{ return JSON.parse(localStorage.getItem('banco-respuestas')||'{}'); }catch(e){ return {}; } }
+function saveAns(a){ try{ localStorage.setItem('banco-respuestas',JSON.stringify(a)); }catch(e){} }
+function renderAct(){
+  const pane=$('#tab-act'); if(pane._done) return; pane._done=true;
+  const ans=loadAns();
+  const intro=el('div',{class:'note'});
+  intro.innerHTML=`<p><b>Actividad práctica: diseñar, calcular y verificar</b></p>
+  <p>Resuelva cada ejercicio en papel con las ecuaciones de la clase. Escriba sus resultados en los campos y luego pulse «Abrir en el simulador»: el montaje se carga con los datos del enunciado pero sin su diseño. Ingrese sus valores y compruebe que lo medido coincide con lo pedido. Use valores comerciales cuando el ejercicio lo indique.</p>
+  <div class="row"><input id="alumno" class="num" style="font:500 14px var(--mono);padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--sunk);color:var(--fg);min-width:0;flex:1 1 220px" placeholder="Nombre del estudiante" aria-label="Nombre del estudiante">
+  <button class="btn" type="button" id="copy-ans">Copiar respuestas</button><button class="btn ghost" type="button" id="clear-ans">Borrar respuestas</button><span class="status" id="ans-status"></span></div>
+  <pre id="ans-text" hidden style="white-space:pre-wrap;font:13px var(--mono);background:var(--sunk);padding:10px;border-radius:6px;max-width:100%;overflow-x:auto"></pre>`;
+  const list=el('div',{class:'exlist'});
+  pane.append(intro,list);
+  $('#alumno').value=ans.alumno||''; $('#alumno').addEventListener('input',e=>{ ans.alumno=e.target.value; saveAns(ans); });
+  for(const ex of EX){
+    const d=el('article',{class:'ex'});
+    d.innerHTML=`<span class="meta">Ejercicio ${ex.id} · ${ex.tema}</span><h3>${ex.tema}</h3><p>${ex.txt}</p>`;
+    const g=el('div',{class:'ans'});
+    ex.f.forEach((lab,i)=>{ const key=`e${ex.id}_${i}`; const L=el('label',{for:key}); L.textContent=lab; const I=el('input',{id:key,type:'text',autocomplete:'off'}); I.value=ans[key]||''; I.addEventListener('input',()=>{ ans[key]=I.value; saveAns(ans); }); L.appendChild(I); g.appendChild(L); });
+    const b=el('button',{class:'btn ghost',type:'button'},'Abrir en el simulador'); b.addEventListener('click',ex.go);
+    d.append(g,el('div',{class:'row'}),); d.lastChild.appendChild(b); list.appendChild(d);
+  }
+  $('#copy-ans').addEventListener('click',()=>{
+    const lines=[`Actividad: Banco de pruebas análogo`,`Estudiante: ${ans.alumno||''}`];
+    for(const ex of EX){ lines.push(`\nEjercicio ${ex.id} (${ex.tema})`); ex.f.forEach((lab,i)=>lines.push(`  ${lab}: ${ans['e'+ex.id+'_'+i]||''}`)); }
+    const txt=lines.join('\n'); const pre=$('#ans-text'); pre.textContent=txt;
+    const st=$('#ans-status');
+    navigator.clipboard.writeText(txt).then(()=>{ st.textContent='Respuestas copiadas. Péguelas en el correo o la plataforma del curso.'; pre.hidden=true; })
+      .catch(()=>{ pre.hidden=false; const rg=document.createRange(); rg.selectNodeContents(pre); const sel=getSelection(); sel.removeAllRanges(); sel.addRange(rg); st.textContent='No se pudo copiar automáticamente: el texto quedó seleccionado abajo, cópielo con Ctrl+C.'; });
+  });
+  const clr=$('#clear-ans'); let armed=false;
+  clr.addEventListener('click',()=>{ if(!armed){ armed=true; clr.textContent='Confirmar: borrar todo'; setTimeout(()=>{armed=false; clr.textContent='Borrar respuestas';},4000); return; }
+    for(const k in ans) delete ans[k]; saveAns(ans); pane.querySelectorAll('input').forEach(i=>i.value=''); armed=false; clr.textContent='Borrar respuestas'; $('#ans-status').textContent='Respuestas borradas.'; });
+}
+renderers.act=renderAct;
+
+/* ---------- arranque ---------- */
+let startTab='amp'; try{ const t=localStorage.getItem('banco-tab'); if(t && TABS.some(x=>x[0]===t)) startTab=t; }catch(e){}
+if(location.hash && TABS.some(x=>'#'+x[0]===location.hash)) startTab=location.hash.slice(1);
+showTab(startTab);
+let rz; window.addEventListener('resize',()=>{ cancelAnimationFrame(rz); rz=requestAnimationFrame(()=>{ const cur=TABS.find(x=>!$('#tab-'+x[0]).hidden); if(cur && renderers[cur[0]] && cur[0]!=='act') renderers[cur[0]](); }); });
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ const cur=TABS.find(x=>!$('#tab-'+x[0]).hidden); if(cur&&cur[0]!=='act') renderers[cur[0]](); });
+</script>
+
+</body>
+</html>
