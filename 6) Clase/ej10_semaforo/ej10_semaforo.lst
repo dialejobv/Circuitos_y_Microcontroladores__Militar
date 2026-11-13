@@ -1,0 +1,90 @@
+0000  281C  goto   0x01C           ; goto    INICIO
+0004  00F0  movwf  0x70            ; movwf   W_TEMP
+0005  0E03  swapf  STATUS,W        ; swapf   STATUS,W
+0006  0183  clrf   STATUS          ; clrf    STATUS
+0007  00F1  movwf  0x71            ; movwf   S_TEMP
+0008  1C0C  btfss  PIR1,0          ; btfss   PIR1,TMR1IF
+0009  2812  goto   0x012           ; goto    NO_T1
+000A  100C  bcf    PIR1,0          ; bcf     PIR1,TMR1IF
+000B  1010  bcf    T1CON,0         ; bcf     T1CON,TMR1ON
+000C  30CF  movlw  0xCF            ; movlw   HIGH (65536 - 12500)
+000D  008F  movwf  TMR1H           ; movwf   TMR1H
+000E  302C  movlw  0x2C            ; movlw   LOW (65536 - 12500)
+000F  008E  movwf  TMR1L           ; movwf   TMR1L
+0010  1410  bsf    T1CON,0         ; bsf     T1CON,TMR1ON
+0011  0AA0  incf   0x20,F          ; incf    DECIMAS,F
+0012  1C8B  btfss  INTCON,1        ; btfss   INTCON,INTF
+0013  2817  goto   0x017           ; goto    FIN_ISR
+0014  108B  bcf    INTCON,1        ; bcf     INTCON,INTF
+0015  3001  movlw  0x01            ; movlw   1
+0016  00A1  movwf  0x21            ; movwf   SOLICITUD
+0017  0E71  swapf  0x71,W          ; swapf   S_TEMP,W
+0018  0083  movwf  STATUS          ; movwf   STATUS
+0019  0EF0  swapf  0x70,F          ; swapf   W_TEMP,F
+001A  0E70  swapf  0x70,W          ; swapf   W_TEMP,W
+001B  0009  retfie                 ; retfie
+001C  1683  bsf    STATUS,5        ; BANKSEL TRISD
+001D  1303  bcf    STATUS,6        ; BANKSEL TRISD
+001E  0188  clrf   PORTD           ; clrf    TRISD
+001F  3000  movlw  0x00            ; movlw   b'00000000'
+0020  0081  movwf  TMR0            ; movwf   OPTION_REG
+0021  140C  bsf    PIR1,0          ; bsf     PIE1,TMR1IE
+0022  1283  bcf    STATUS,5        ; BANKSEL PORTD
+0023  1303  bcf    STATUS,6        ; BANKSEL PORTD
+0024  0188  clrf   PORTD           ; clrf    PORTD
+0025  01A1  clrf   0x21            ; clrf    SOLICITUD
+0026  30CF  movlw  0xCF            ; movlw   HIGH (65536 - 12500)
+0027  008F  movwf  TMR1H           ; movwf   TMR1H
+0028  302C  movlw  0x2C            ; movlw   LOW (65536 - 12500)
+0029  008E  movwf  TMR1L           ; movwf   TMR1L
+002A  3031  movlw  0x31            ; movlw   b'00110001'
+002B  0090  movwf  T1CON           ; movwf   T1CON
+002C  30D0  movlw  0xD0            ; movlw   b'11010000'
+002D  008B  movwf  INTCON          ; movwf   INTCON
+002E  300C  movlw  0x0C            ; movlw   (1 << VERDE_V) | (1 << ROJO_P)
+002F  0088  movwf  PORTD           ; movwf   PORTD
+0030  01A0  clrf   0x20            ; clrf    DECIMAS
+0031  1821  btfsc  0x21,0          ; btfsc   SOLICITUD,0
+0032  1688  bsf    PORTD,5         ; bsf     PORTD,ESPERE
+0033  3064  movlw  0x64            ; movlw   100
+0034  0220  subwf  0x20,W          ; subwf   DECIMAS,W
+0035  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0036  283D  goto   0x03D           ; goto    AMARILLO
+0037  1C21  btfss  0x21,0          ; btfss   SOLICITUD,0
+0038  2831  goto   0x031           ; goto    V1
+0039  301E  movlw  0x1E            ; movlw   30
+003A  0220  subwf  0x20,W          ; subwf   DECIMAS,W
+003B  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+003C  2831  goto   0x031           ; goto    V1
+003D  300A  movlw  0x0A            ; movlw   (1 << AMAR_V) | (1 << ROJO_P)
+003E  1821  btfsc  0x21,0          ; btfsc   SOLICITUD,0
+003F  3820  iorlw  0x20            ; iorlw   (1 << ESPERE)
+0040  0088  movwf  PORTD           ; movwf   PORTD
+0041  3014  movlw  0x14            ; movlw   20
+0042  2056  call   0x056           ; call    ESPERAR
+0043  01A1  clrf   0x21            ; clrf    SOLICITUD
+0044  3011  movlw  0x11            ; movlw   (1 << ROJO_V) | (1 << VERDE_P)
+0045  0088  movwf  PORTD           ; movwf   PORTD
+0046  3032  movlw  0x32            ; movlw   50
+0047  2056  call   0x056           ; call    ESPERAR
+0048  3006  movlw  0x06            ; movlw   6
+0049  00A3  movwf  0x23            ; movwf   VECES
+004A  3010  movlw  0x10            ; movlw   (1 << VERDE_P)
+004B  0688  xorwf  PORTD,F         ; xorwf   PORTD,F
+004C  3005  movlw  0x05            ; movlw   5
+004D  2056  call   0x056           ; call    ESPERAR
+004E  0BA3  decfsz 0x23,F          ; decfsz  VECES,F
+004F  284A  goto   0x04A           ; goto    PARPADEO
+0050  3009  movlw  0x09            ; movlw   (1 << ROJO_V) | (1 << ROJO_P)
+0051  0088  movwf  PORTD           ; movwf   PORTD
+0052  300A  movlw  0x0A            ; movlw   10
+0053  2056  call   0x056           ; call    ESPERAR
+0054  01A1  clrf   0x21            ; clrf    SOLICITUD
+0055  282E  goto   0x02E           ; goto    VERDE
+0056  00A2  movwf  0x22            ; movwf   LIMITE
+0057  01A0  clrf   0x20            ; clrf    DECIMAS
+0058  0822  movf   0x22,W          ; movf    LIMITE,W
+0059  0220  subwf  0x20,W          ; subwf   DECIMAS,W
+005A  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+005B  2858  goto   0x058           ; goto    ES1
+005C  0008  return                 ; return

@@ -1,0 +1,45 @@
+0000  280C  goto 0x00C             ; goto    inicio
+0001  0782  addwf 0x02,F           ; tabla   addwf   PCL,F
+0002  343F  retlw 0x3F             ; retlw 0x3F
+0003  3406  retlw 0x06             ; retlw 0x06
+0004  345B  retlw 0x5B             ; retlw 0x5B
+0005  344F  retlw 0x4F             ; retlw 0x4F
+0006  3466  retlw 0x66             ; retlw 0x66
+0007  346D  retlw 0x6D             ; retlw 0x6D
+0008  347D  retlw 0x7D             ; retlw 0x7D
+0009  3407  retlw 0x07             ; retlw 0x07
+000A  347F  retlw 0x7F             ; retlw 0x7F
+000B  346F  retlw 0x6F             ; retlw 0x6F
+000C  1683  bsf 0x03,5             ; bsf/bcf STATUS,RP0
+000D  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+000E  0188  clrf 0x08              ; clrf    TRISD           ; PORTD: segmentos
+000F  30FF  movlw 0xFF             ; movlw   0xFF
+0010  0086  movwf 0x06             ; movwf   TRISB           ; PORTB: entradas
+0011  1283  bcf 0x03,5             ; bsf/bcf STATUS,RP0
+0012  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+0013  01A0  clrf 0x20              ; clrf    cuenta
+0014  0820  movf 0x20,W            ; mostrar movf    cuenta,W
+0015  2001  call 0x001             ; call    tabla
+0016  0088  movwf 0x08             ; movwf   PORTD
+0017  1806  btfsc 0x06,0           ; esperaP btfsc   PORTB,0         ; espera la pulsación (RB0 = 0)
+0018  2817  goto 0x017             ; goto    esperaP
+0019  2023  call 0x023             ; call    rebote
+001A  1C06  btfss 0x06,0           ; esperaS btfss   PORTB,0         ; espera que se suelte
+001B  281A  goto 0x01A             ; goto    esperaS
+001C  2023  call 0x023             ; call    rebote
+001D  0AA0  incf 0x20,F            ; incf    cuenta,F        ; cuenta = cuenta + 1
+001E  0820  movf 0x20,W            ; movf    cuenta,W
+001F  3A0A  xorlw 0x0A             ; xorlw   d'10'           ; ¿llegó a 10?
+0020  1903  btfsc 0x03,2           ; btfsc   STATUS,Z
+0021  01A0  clrf 0x20              ; clrf    cuenta          ; sí: vuelve a 0
+0022  2814  goto 0x014             ; goto    mostrar
+0023  3014  movlw 0x14             ; rebote  movlw   d'20'
+0024  00A2  movwf 0x22             ; movwf   d3
+0025  30F9  movlw 0xF9             ; r1      movlw   d'249'
+0026  00A1  movwf 0x21             ; movwf   d1
+0027  0000  nop                    ; r2      nop
+0028  0BA1  decfsz 0x21,F          ; decfsz  d1,F
+0029  2827  goto 0x027             ; goto    r2
+002A  0BA2  decfsz 0x22,F          ; decfsz  d3,F
+002B  2825  goto 0x025             ; goto    r1
+002C  0008  return                 ; return

@@ -1,0 +1,31 @@
+0000  2801  goto 0x001             ; goto    inicio
+0001  1683  bsf 0x03,5             ; bsf/bcf STATUS,RP0
+0002  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+0003  30FF  movlw 0xFF             ; movlw   0xFF
+0004  0085  movwf 0x05             ; movwf   TRISA           ; PORTA: entradas (AN0)
+0005  0186  clrf 0x06              ; clrf    TRISB           ; PORTB: LEDs con el valor del ADC
+0006  1107  bcf 0x07,2             ; bcf     TRISC,2         ; RC2/CCP1: salida PWM
+0007  300E  movlw 0x0E             ; movlw   b'00001110'     ; ADFM = 0 (izquierda), PCFG = 1110: solo AN0 analógico
+0008  009F  movwf 0x1F             ; movwf   ADCON1
+0009  30FF  movlw 0xFF             ; movlw   d'255'
+000A  0092  movwf 0x12             ; movwf   PR2             ; periodo PWM = (255+1)·4·Tosc·4 = 1,024 ms
+000B  1283  bcf 0x03,5             ; bsf/bcf STATUS,RP0
+000C  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+000D  3041  movlw 0x41             ; movlw   b'01000001'     ; Fosc/8 (Tad = 2 µs), canal 0, ADON = 1
+000E  009F  movwf 0x1F             ; movwf   ADCON0
+000F  3005  movlw 0x05             ; movlw   b'00000101'     ; TMR2 encendido, preescalador 1:4
+0010  0092  movwf 0x12             ; movwf   T2CON
+0011  300C  movlw 0x0C             ; movlw   b'00001100'     ; CCP1 en modo PWM
+0012  0097  movwf 0x17             ; movwf   CCP1CON
+0013  0195  clrf 0x15              ; clrf    CCPR1L
+0014  3007  movlw 0x07             ; bucle   movlw   d'7'            ; tiempo de adquisición ≈ 20 µs
+0015  00A0  movwf 0x20             ; movwf   d1
+0016  0BA0  decfsz 0x20,F          ; adq     decfsz  d1,F
+0017  2816  goto 0x016             ; goto    adq
+0018  151F  bsf 0x1F,2             ; bsf     ADCON0,GO       ; inicia la conversión
+0019  191F  btfsc 0x1F,2           ; espera  btfsc   ADCON0,GO       ; espera GO/DONE = 0
+001A  2819  goto 0x019             ; goto    espera
+001B  081E  movf 0x1E,W            ; movf    ADRESH,W
+001C  0095  movwf 0x15             ; movwf   CCPR1L          ; ciclo útil = ADRESH/256
+001D  0086  movwf 0x06             ; movwf   PORTB           ; muestra el valor en los LEDs
+001E  2814  goto 0x014             ; goto    bucle

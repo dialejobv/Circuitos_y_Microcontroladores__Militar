@@ -1,0 +1,272 @@
+0000  2805  goto   0x005           ; goto    INICIO
+0005  1683  bsf    STATUS,5        ; BANKSEL TRISC
+0006  1303  bcf    STATUS,6        ; BANKSEL TRISC
+0007  1107  bcf    PORTC,2         ; bcf     TRISC,2
+0008  300E  movlw  0x0E            ; movlw   0x0E
+0009  009F  movwf  ADCON0          ; movwf   ADCON1
+000A  1283  bcf    STATUS,5        ; BANKSEL PORTC
+000B  1303  bcf    STATUS,6        ; BANKSEL PORTC
+000C  1107  bcf    PORTC,2         ; bcf     PORTC,2
+000D  3041  movlw  0x41            ; movlw   0x41
+000E  009F  movwf  ADCON0          ; movwf   ADCON0
+000F  3080  movlw  0x80            ; movlw   128
+0010  00A0  movwf  0x20            ; movwf   POS
+0011  2085  call   0x085           ; call    LCD_INIT
+0012  3080  movlw  0x80            ; movlw   0x80
+0013  20A3  call   0x0A3           ; call    LCD_CMD
+0014  3000  movlw  0x00            ; movlw   HIGH TXT_ANG
+0015  00EC  movwf  0x6C            ; movwf   PTR_H
+0016  3060  movlw  0x60            ; movlw   LOW TXT_ANG
+0017  00ED  movwf  0x6D            ; movwf   PTR_L
+0018  20BE  call   0x0BE           ; call    LCD_CADENA
+0019  30C0  movlw  0xC0            ; movlw   0xC0
+001A  20A3  call   0x0A3           ; call    LCD_CMD
+001B  3000  movlw  0x00            ; movlw   HIGH TXT_PUL
+001C  00EC  movwf  0x6C            ; movwf   PTR_H
+001D  3068  movlw  0x68            ; movlw   LOW TXT_PUL
+001E  00ED  movwf  0x6D            ; movwf   PTR_L
+001F  20BE  call   0x0BE           ; call    LCD_CADENA
+0020  1507  bsf    PORTC,2         ; bsf     PORTC,2
+0021  3001  movlw  0x01            ; movlw   1
+0022  2077  call   0x077           ; call    RETARDO_MS
+0023  0820  movf   0x20,W          ; movf    POS,W
+0024  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0025  282A  goto   0x02A           ; goto    FIN_PULSO
+0026  00A1  movwf  0x21            ; movwf   CUENTA
+0027  0000  nop                    ; nop
+0028  0BA1  decfsz 0x21,F          ; decfsz  CUENTA,F
+0029  2827  goto   0x027           ; goto    PUL1
+002A  1107  bcf    PORTC,2         ; bcf     PORTC,2
+002B  151F  bsf    ADCON0,2        ; bsf     ADCON0,GO
+002C  191F  btfsc  ADCON0,2        ; btfsc   ADCON0,GO
+002D  282C  goto   0x02C           ; goto    ESPERA
+002E  081E  movf   ADRESH,W        ; movf    ADRESH,W
+002F  00A0  movwf  0x20            ; movwf   POS
+0030  01D0  clrf   0x50            ; clrf    NUM_H
+0031  00D1  movwf  0x51            ; movwf   NUM_L
+0032  01D2  clrf   0x52            ; clrf    K_H
+0033  30B4  movlw  0xB4            ; movlw   180
+0034  00D3  movwf  0x53            ; movwf   K_L
+0035  20F4  call   0x0F4           ; call    MUL16
+0036  01D0  clrf   0x50            ; clrf    NUM_H
+0037  085C  movf   0x5C,W          ; movf    P1,W
+0038  00D1  movwf  0x51            ; movwf   NUM_L
+0039  20CB  call   0x0CB           ; call    BCD16
+003A  3088  movlw  0x88            ; movlw   0x88
+003B  20A3  call   0x0A3           ; call    LCD_CMD
+003C  0858  movf   0x58,W          ; movf    DIG2,W
+003D  20A5  call   0x0A5           ; call    LCD_NUM
+003E  0859  movf   0x59,W          ; movf    DIG1,W
+003F  20A5  call   0x0A5           ; call    LCD_NUM
+0040  085A  movf   0x5A,W          ; movf    DIG0,W
+0041  20A5  call   0x0A5           ; call    LCD_NUM
+0042  30DF  movlw  0xDF            ; movlw   0xDF
+0043  20A6  call   0x0A6           ; call    LCD_DATO
+0044  01D0  clrf   0x50            ; clrf    NUM_H
+0045  0820  movf   0x20,W          ; movf    POS,W
+0046  00D1  movwf  0x51            ; movwf   NUM_L
+0047  1003  bcf    STATUS,0        ; bcf     STATUS,C
+0048  0DD1  rlf    0x51,F          ; rlf     NUM_L,F
+0049  0DD0  rlf    0x50,F          ; rlf     NUM_H,F
+004A  0DD1  rlf    0x51,F          ; rlf     NUM_L,F
+004B  0DD0  rlf    0x50,F          ; rlf     NUM_H,F
+004C  30E8  movlw  0xE8            ; movlw   LOW 1000
+004D  07D1  addwf  0x51,F          ; addwf   NUM_L,F
+004E  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+004F  0AD0  incf   0x50,F          ; incf    NUM_H,F
+0050  3003  movlw  0x03            ; movlw   HIGH 1000
+0051  07D0  addwf  0x50,F          ; addwf   NUM_H,F
+0052  20CB  call   0x0CB           ; call    BCD16
+0053  30C7  movlw  0xC7            ; movlw   0xC7
+0054  20A3  call   0x0A3           ; call    LCD_CMD
+0055  0857  movf   0x57,W          ; movf    DIG3,W
+0056  20A5  call   0x0A5           ; call    LCD_NUM
+0057  0858  movf   0x58,W          ; movf    DIG2,W
+0058  20A5  call   0x0A5           ; call    LCD_NUM
+0059  0859  movf   0x59,W          ; movf    DIG1,W
+005A  20A5  call   0x0A5           ; call    LCD_NUM
+005B  085A  movf   0x5A,W          ; movf    DIG0,W
+005C  20A5  call   0x0A5           ; call    LCD_NUM
+005D  3011  movlw  0x11            ; movlw   17
+005E  2077  call   0x077           ; call    RETARDO_MS
+005F  2820  goto   0x020           ; goto    LAZO
+0060  3441  retlw  0x41            ; DT      "Angulo:",0
+0061  346E  retlw  0x6E            ; DT      "Angulo:",0
+0062  3467  retlw  0x67            ; DT      "Angulo:",0
+0063  3475  retlw  0x75            ; DT      "Angulo:",0
+0064  346C  retlw  0x6C            ; DT      "Angulo:",0
+0065  346F  retlw  0x6F            ; DT      "Angulo:",0
+0066  343A  retlw  0x3A            ; DT      "Angulo:",0
+0067  3400  retlw  0x00            ; DT      "Angulo:",0
+0068  3450  retlw  0x50            ; DT      "Pulso:      us",0
+0069  3475  retlw  0x75            ; DT      "Pulso:      us",0
+006A  346C  retlw  0x6C            ; DT      "Pulso:      us",0
+006B  3473  retlw  0x73            ; DT      "Pulso:      us",0
+006C  346F  retlw  0x6F            ; DT      "Pulso:      us",0
+006D  343A  retlw  0x3A            ; DT      "Pulso:      us",0
+006E  3420  retlw  0x20            ; DT      "Pulso:      us",0
+006F  3420  retlw  0x20            ; DT      "Pulso:      us",0
+0070  3420  retlw  0x20            ; DT      "Pulso:      us",0
+0071  3420  retlw  0x20            ; DT      "Pulso:      us",0
+0072  3420  retlw  0x20            ; DT      "Pulso:      us",0
+0073  3420  retlw  0x20            ; DT      "Pulso:      us",0
+0074  3475  retlw  0x75            ; DT      "Pulso:      us",0
+0075  3473  retlw  0x73            ; DT      "Pulso:      us",0
+0076  3400  retlw  0x00            ; DT      "Pulso:      us",0
+0077  00E8  movwf  0x68            ; movwf   R_MS
+0078  30F9  movlw  0xF9            ; movlw   249
+0079  00E9  movwf  0x69            ; movwf   R_US
+007A  0000  nop                    ; nop
+007B  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+007C  287A  goto   0x07A           ; goto    RMS2
+007D  0BE8  decfsz 0x68,F          ; decfsz  R_MS,F
+007E  2878  goto   0x078           ; goto    RMS1
+007F  0008  return                 ; return
+0080  300F  movlw  0x0F            ; movlw   15
+0081  00E9  movwf  0x69            ; movwf   R_US
+0082  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+0083  2882  goto   0x082           ; goto    R50
+0084  0008  return                 ; return
+0085  1683  bsf    STATUS,5        ; BANKSEL TRISD
+0086  1303  bcf    STATUS,6        ; BANKSEL TRISD
+0087  0188  clrf   PORTD           ; clrf    TRISD
+0088  1283  bcf    STATUS,5        ; BANKSEL PORTD
+0089  1303  bcf    STATUS,6        ; BANKSEL PORTD
+008A  0188  clrf   PORTD           ; clrf    PORTD
+008B  3014  movlw  0x14            ; movlw   20
+008C  2077  call   0x077           ; call    RETARDO_MS
+008D  3030  movlw  0x30            ; movlw   0x30
+008E  20B4  call   0x0B4           ; call    LCD_NIB
+008F  3005  movlw  0x05            ; movlw   5
+0090  2077  call   0x077           ; call    RETARDO_MS
+0091  3030  movlw  0x30            ; movlw   0x30
+0092  20B4  call   0x0B4           ; call    LCD_NIB
+0093  2080  call   0x080           ; call    RETARDO_50US
+0094  2080  call   0x080           ; call    RETARDO_50US
+0095  3030  movlw  0x30            ; movlw   0x30
+0096  20B4  call   0x0B4           ; call    LCD_NIB
+0097  2080  call   0x080           ; call    RETARDO_50US
+0098  3020  movlw  0x20            ; movlw   0x20
+0099  20B4  call   0x0B4           ; call    LCD_NIB
+009A  2080  call   0x080           ; call    RETARDO_50US
+009B  3028  movlw  0x28            ; movlw   0x28
+009C  20A3  call   0x0A3           ; call    LCD_CMD
+009D  300C  movlw  0x0C            ; movlw   0x0C
+009E  20A3  call   0x0A3           ; call    LCD_CMD
+009F  3006  movlw  0x06            ; movlw   0x06
+00A0  20A3  call   0x0A3           ; call    LCD_CMD
+00A1  3001  movlw  0x01            ; movlw   0x01
+00A2  28A3  goto   0x0A3           ; goto    LCD_CMD
+00A3  1008  bcf    PORTD,0         ; bcf     PORTD,0
+00A4  28A7  goto   0x0A7           ; goto    LCD_BYTE
+00A5  3E30  addlw  0x30            ; addlw   '0'
+00A6  1408  bsf    PORTD,0         ; bsf     PORTD,0
+00A7  00EB  movwf  0x6B            ; movwf   LCD_DAT
+00A8  20B4  call   0x0B4           ; call    LCD_NIB
+00A9  0E6B  swapf  0x6B,W          ; swapf   LCD_DAT,W
+00AA  20B4  call   0x0B4           ; call    LCD_NIB
+00AB  2080  call   0x080           ; call    RETARDO_50US
+00AC  1808  btfsc  PORTD,0         ; btfsc   PORTD,0
+00AD  0008  return                 ; return
+00AE  3003  movlw  0x03            ; movlw   3
+00AF  026B  subwf  0x6B,W          ; subwf   LCD_DAT,W
+00B0  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+00B1  0008  return                 ; return
+00B2  3002  movlw  0x02            ; movlw   2
+00B3  2877  goto   0x077           ; goto    RETARDO_MS
+00B4  39F0  andlw  0xF0            ; andlw   0xF0
+00B5  00EA  movwf  0x6A            ; movwf   LCD_TMP
+00B6  0808  movf   PORTD,W         ; movf    PORTD,W
+00B7  390F  andlw  0x0F            ; andlw   0x0F
+00B8  046A  iorwf  0x6A,W          ; iorwf   LCD_TMP,W
+00B9  0088  movwf  PORTD           ; movwf   PORTD
+00BA  1488  bsf    PORTD,1         ; bsf     PORTD,1
+00BB  0000  nop                    ; nop
+00BC  1088  bcf    PORTD,1         ; bcf     PORTD,1
+00BD  0008  return                 ; return
+00BE  20C7  call   0x0C7           ; call    LEER_TABLA
+00BF  3800  iorlw  0x00            ; iorlw   0
+00C0  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00C1  0008  return                 ; return
+00C2  20A6  call   0x0A6           ; call    LCD_DATO
+00C3  0AED  incf   0x6D,F          ; incf    PTR_L,F
+00C4  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00C5  0AEC  incf   0x6C,F          ; incf    PTR_H,F
+00C6  28BE  goto   0x0BE           ; goto    LCD_CADENA
+00C7  086C  movf   0x6C,W          ; movf    PTR_H,W
+00C8  008A  movwf  PCLATH          ; movwf   PCLATH
+00C9  086D  movf   0x6D,W          ; movf    PTR_L,W
+00CA  0082  movwf  PCL             ; movwf   PCL
+00CB  3027  movlw  0x27            ; movlw   HIGH 10000
+00CC  00D2  movwf  0x52            ; movwf   K_H
+00CD  3010  movlw  0x10            ; movlw   LOW 10000
+00CE  00D3  movwf  0x53            ; movwf   K_L
+00CF  20E3  call   0x0E3           ; call    CONTAR
+00D0  00D6  movwf  0x56            ; movwf   DIG4
+00D1  3003  movlw  0x03            ; movlw   HIGH 1000
+00D2  00D2  movwf  0x52            ; movwf   K_H
+00D3  30E8  movlw  0xE8            ; movlw   LOW 1000
+00D4  00D3  movwf  0x53            ; movwf   K_L
+00D5  20E3  call   0x0E3           ; call    CONTAR
+00D6  00D7  movwf  0x57            ; movwf   DIG3
+00D7  01D2  clrf   0x52            ; clrf    K_H
+00D8  3064  movlw  0x64            ; movlw   100
+00D9  00D3  movwf  0x53            ; movwf   K_L
+00DA  20E3  call   0x0E3           ; call    CONTAR
+00DB  00D8  movwf  0x58            ; movwf   DIG2
+00DC  300A  movlw  0x0A            ; movlw   10
+00DD  00D3  movwf  0x53            ; movwf   K_L
+00DE  20E3  call   0x0E3           ; call    CONTAR
+00DF  00D9  movwf  0x59            ; movwf   DIG1
+00E0  0851  movf   0x51,W          ; movf    NUM_L,W
+00E1  00DA  movwf  0x5A            ; movwf   DIG0
+00E2  0008  return                 ; return
+00E3  01D5  clrf   0x55            ; clrf    CNT
+00E4  0853  movf   0x53,W          ; movf    K_L,W
+00E5  0251  subwf  0x51,W          ; subwf   NUM_L,W
+00E6  00D4  movwf  0x54            ; movwf   TMP_L
+00E7  0852  movf   0x52,W          ; movf    K_H,W
+00E8  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+00E9  3E01  addlw  0x01            ; addlw   1
+00EA  0250  subwf  0x50,W          ; subwf   NUM_H,W
+00EB  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+00EC  28F2  goto   0x0F2           ; goto    CT2
+00ED  00D0  movwf  0x50            ; movwf   NUM_H
+00EE  0854  movf   0x54,W          ; movf    TMP_L,W
+00EF  00D1  movwf  0x51            ; movwf   NUM_L
+00F0  0AD5  incf   0x55,F          ; incf    CNT,F
+00F1  28E4  goto   0x0E4           ; goto    CT1
+00F2  0855  movf   0x55,W          ; movf    CNT,W
+00F3  0008  return                 ; return
+00F4  01DD  clrf   0x5D            ; clrf    P0
+00F5  01DC  clrf   0x5C            ; clrf    P1
+00F6  01DB  clrf   0x5B            ; clrf    P2
+00F7  01DE  clrf   0x5E            ; clrf    X2
+00F8  0850  movf   0x50,W          ; movf    NUM_H,W
+00F9  00DF  movwf  0x5F            ; movwf   X1
+00FA  0851  movf   0x51,W          ; movf    NUM_L,W
+00FB  00E0  movwf  0x60            ; movwf   X0
+00FC  3010  movlw  0x10            ; movlw   16
+00FD  00D5  movwf  0x55            ; movwf   CNT
+00FE  1003  bcf    STATUS,0        ; bcf     STATUS,C
+00FF  0CD2  rrf    0x52,F          ; rrf     K_H,F
+0100  0CD3  rrf    0x53,F          ; rrf     K_L,F
+0101  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+0102  290D  goto   0x10D           ; goto    ML2
+0103  0860  movf   0x60,W          ; movf    X0,W
+0104  07DD  addwf  0x5D,F          ; addwf   P0,F
+0105  085F  movf   0x5F,W          ; movf    X1,W
+0106  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0107  0F5F  incfsz 0x5F,W          ; incfsz  X1,W
+0108  07DC  addwf  0x5C,F          ; addwf   P1,F
+0109  085E  movf   0x5E,W          ; movf    X2,W
+010A  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+010B  0F5E  incfsz 0x5E,W          ; incfsz  X2,W
+010C  07DB  addwf  0x5B,F          ; addwf   P2,F
+010D  1003  bcf    STATUS,0        ; bcf     STATUS,C
+010E  0DE0  rlf    0x60,F          ; rlf     X0,F
+010F  0DDF  rlf    0x5F,F          ; rlf     X1,F
+0110  0DDE  rlf    0x5E,F          ; rlf     X2,F
+0111  0BD5  decfsz 0x55,F          ; decfsz  CNT,F
+0112  28FE  goto   0x0FE           ; goto    ML1
+0113  0008  return                 ; return

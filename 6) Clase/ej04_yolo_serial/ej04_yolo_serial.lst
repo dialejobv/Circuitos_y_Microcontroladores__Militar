@@ -1,0 +1,331 @@
+0000  2805  goto   0x005           ; goto    INICIO
+0005  1683  bsf    STATUS,5        ; BANKSEL TRISB
+0006  1303  bcf    STATUS,6        ; BANKSEL TRISB
+0007  0186  clrf   PORTB           ; clrf    TRISB
+0008  3019  movlw  0x19            ; movlw   25
+0009  0099  movwf  TXREG           ; movwf   SPBRG
+000A  3024  movlw  0x24            ; movlw   0x24
+000B  0098  movwf  RCSTA           ; movwf   TXSTA
+000C  1283  bcf    STATUS,5        ; BANKSEL RCSTA
+000D  1303  bcf    STATUS,6        ; BANKSEL RCSTA
+000E  3090  movlw  0x90            ; movlw   0x90
+000F  0098  movwf  RCSTA           ; movwf   RCSTA
+0010  0186  clrf   PORTB           ; clrf    PORTB
+0011  01A1  clrf   0x21            ; clrf    TOTAL
+0012  2109  call   0x109           ; call    LCD_INIT
+0013  3080  movlw  0x80            ; movlw   0x80
+0014  2127  call   0x127           ; call    LCD_CMD
+0015  3000  movlw  0x00            ; movlw   HIGH TXT_TIT
+0016  00EC  movwf  0x6C            ; movwf   PTR_H
+0017  3076  movlw  0x76            ; movlw   LOW TXT_TIT
+0018  00ED  movwf  0x6D            ; movwf   PTR_L
+0019  2142  call   0x142           ; call    LCD_CADENA
+001A  3000  movlw  0x00            ; movlw   HIGH TXT_ESP
+001B  2060  call   0x060           ; call    LINEA2
+001C  3000  movlw  0x00            ; movlw   HIGH TXT_LISTO
+001D  00EC  movwf  0x6C            ; movwf   PTR_H
+001E  30DC  movlw  0xDC            ; movlw   LOW TXT_LISTO
+001F  00ED  movwf  0x6D            ; movwf   PTR_L
+0020  206D  call   0x06D           ; call    TX_CADENA
+0021  1898  btfsc  RCSTA,1         ; btfsc   RCSTA,OERR
+0022  2066  call   0x066           ; call    LIMPIAR_OERR
+0023  1E8C  btfss  PIR1,5          ; btfss   PIR1,RCIF
+0024  2821  goto   0x021           ; goto    LAZO
+0025  081A  movf   RCREG,W         ; movf    RCREG,W
+0026  39DF  andlw  0xDF            ; andlw   0xDF
+0027  00A0  movwf  0x20            ; movwf   DATO
+0028  3A43  xorlw  0x43            ; xorlw   'C'
+0029  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+002A  2838  goto   0x038           ; goto    CARRO
+002B  0820  movf   0x20,W          ; movf    DATO,W
+002C  3A4D  xorlw  0x4D            ; xorlw   'M'
+002D  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+002E  283E  goto   0x03E           ; goto    MOTO
+002F  0820  movf   0x20,W          ; movf    DATO,W
+0030  3A50  xorlw  0x50            ; xorlw   'P'
+0031  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0032  2844  goto   0x044           ; goto    PERSONA
+0033  0820  movf   0x20,W          ; movf    DATO,W
+0034  3A4E  xorlw  0x4E            ; xorlw   'N'
+0035  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0036  284A  goto   0x04A           ; goto    NADA
+0037  2821  goto   0x021           ; goto    LAZO
+0038  3001  movlw  0x01            ; movlw   b'00000001'
+0039  0086  movwf  PORTB           ; movwf   PORTB
+003A  3000  movlw  0x00            ; movlw   HIGH TXT_CARRO
+003B  00EC  movwf  0x6C            ; movwf   PTR_H
+003C  3098  movlw  0x98            ; movlw   LOW TXT_CARRO
+003D  284E  goto   0x04E           ; goto    RESPONDER
+003E  3002  movlw  0x02            ; movlw   b'00000010'
+003F  0086  movwf  PORTB           ; movwf   PORTB
+0040  3000  movlw  0x00            ; movlw   HIGH TXT_MOTO
+0041  00EC  movwf  0x6C            ; movwf   PTR_H
+0042  30A9  movlw  0xA9            ; movlw   LOW TXT_MOTO
+0043  284E  goto   0x04E           ; goto    RESPONDER
+0044  3004  movlw  0x04            ; movlw   b'00000100'
+0045  0086  movwf  PORTB           ; movwf   PORTB
+0046  3000  movlw  0x00            ; movlw   HIGH TXT_PERS
+0047  00EC  movwf  0x6C            ; movwf   PTR_H
+0048  30BA  movlw  0xBA            ; movlw   LOW TXT_PERS
+0049  284E  goto   0x04E           ; goto    RESPONDER
+004A  0186  clrf   PORTB           ; clrf    PORTB
+004B  3000  movlw  0x00            ; movlw   HIGH TXT_NADA
+004C  00EC  movwf  0x6C            ; movwf   PTR_H
+004D  30CB  movlw  0xCB            ; movlw   LOW TXT_NADA
+004E  00ED  movwf  0x6D            ; movwf   PTR_L
+004F  30C0  movlw  0xC0            ; movlw   0xC0
+0050  2127  call   0x127           ; call    LCD_CMD
+0051  2142  call   0x142           ; call    LCD_CADENA
+0052  0AA1  incf   0x21,F          ; incf    TOTAL,F
+0053  304F  movlw  0x4F            ; movlw   'O'
+0054  2069  call   0x069           ; call    TX_BYTE
+0055  304B  movlw  0x4B            ; movlw   'K'
+0056  2069  call   0x069           ; call    TX_BYTE
+0057  303A  movlw  0x3A            ; movlw   ':'
+0058  2069  call   0x069           ; call    TX_BYTE
+0059  0820  movf   0x20,W          ; movf    DATO,W
+005A  2069  call   0x069           ; call    TX_BYTE
+005B  300D  movlw  0x0D            ; movlw   13
+005C  2069  call   0x069           ; call    TX_BYTE
+005D  300A  movlw  0x0A            ; movlw   10
+005E  2069  call   0x069           ; call    TX_BYTE
+005F  2821  goto   0x021           ; goto    LAZO
+0060  00EC  movwf  0x6C            ; movwf   PTR_H
+0061  3087  movlw  0x87            ; movlw   LOW TXT_ESP
+0062  00ED  movwf  0x6D            ; movwf   PTR_L
+0063  30C0  movlw  0xC0            ; movlw   0xC0
+0064  2127  call   0x127           ; call    LCD_CMD
+0065  2942  goto   0x142           ; goto    LCD_CADENA
+0066  1218  bcf    RCSTA,4         ; bcf     RCSTA,CREN
+0067  1618  bsf    RCSTA,4         ; bsf     RCSTA,CREN
+0068  0008  return                 ; return
+0069  1E0C  btfss  PIR1,4          ; btfss   PIR1,TXIF
+006A  2869  goto   0x069           ; goto    TX_BYTE
+006B  0099  movwf  TXREG           ; movwf   TXREG
+006C  0008  return                 ; return
+006D  214B  call   0x14B           ; call    LEER_TABLA
+006E  3800  iorlw  0x00            ; iorlw   0
+006F  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0070  0008  return                 ; return
+0071  2069  call   0x069           ; call    TX_BYTE
+0072  0AED  incf   0x6D,F          ; incf    PTR_L,F
+0073  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0074  0AEC  incf   0x6C,F          ; incf    PTR_H,F
+0075  286D  goto   0x06D           ; goto    TX_CADENA
+0076  3459  retlw  0x59            ; DT    "YOLO + PIC16F877",0
+0077  344F  retlw  0x4F            ; DT    "YOLO + PIC16F877",0
+0078  344C  retlw  0x4C            ; DT    "YOLO + PIC16F877",0
+0079  344F  retlw  0x4F            ; DT    "YOLO + PIC16F877",0
+007A  3420  retlw  0x20            ; DT    "YOLO + PIC16F877",0
+007B  342B  retlw  0x2B            ; DT    "YOLO + PIC16F877",0
+007C  3420  retlw  0x20            ; DT    "YOLO + PIC16F877",0
+007D  3450  retlw  0x50            ; DT    "YOLO + PIC16F877",0
+007E  3449  retlw  0x49            ; DT    "YOLO + PIC16F877",0
+007F  3443  retlw  0x43            ; DT    "YOLO + PIC16F877",0
+0080  3431  retlw  0x31            ; DT    "YOLO + PIC16F877",0
+0081  3436  retlw  0x36            ; DT    "YOLO + PIC16F877",0
+0082  3446  retlw  0x46            ; DT    "YOLO + PIC16F877",0
+0083  3438  retlw  0x38            ; DT    "YOLO + PIC16F877",0
+0084  3437  retlw  0x37            ; DT    "YOLO + PIC16F877",0
+0085  3437  retlw  0x37            ; DT    "YOLO + PIC16F877",0
+0086  3400  retlw  0x00            ; DT    "YOLO + PIC16F877",0
+0087  3445  retlw  0x45            ; DT    "Esperando...    ",0
+0088  3473  retlw  0x73            ; DT    "Esperando...    ",0
+0089  3470  retlw  0x70            ; DT    "Esperando...    ",0
+008A  3465  retlw  0x65            ; DT    "Esperando...    ",0
+008B  3472  retlw  0x72            ; DT    "Esperando...    ",0
+008C  3461  retlw  0x61            ; DT    "Esperando...    ",0
+008D  346E  retlw  0x6E            ; DT    "Esperando...    ",0
+008E  3464  retlw  0x64            ; DT    "Esperando...    ",0
+008F  346F  retlw  0x6F            ; DT    "Esperando...    ",0
+0090  342E  retlw  0x2E            ; DT    "Esperando...    ",0
+0091  342E  retlw  0x2E            ; DT    "Esperando...    ",0
+0092  342E  retlw  0x2E            ; DT    "Esperando...    ",0
+0093  3420  retlw  0x20            ; DT    "Esperando...    ",0
+0094  3420  retlw  0x20            ; DT    "Esperando...    ",0
+0095  3420  retlw  0x20            ; DT    "Esperando...    ",0
+0096  3420  retlw  0x20            ; DT    "Esperando...    ",0
+0097  3400  retlw  0x00            ; DT    "Esperando...    ",0
+0098  344F  retlw  0x4F            ; DT    "Objeto: CARRO   ",0
+0099  3462  retlw  0x62            ; DT    "Objeto: CARRO   ",0
+009A  346A  retlw  0x6A            ; DT    "Objeto: CARRO   ",0
+009B  3465  retlw  0x65            ; DT    "Objeto: CARRO   ",0
+009C  3474  retlw  0x74            ; DT    "Objeto: CARRO   ",0
+009D  346F  retlw  0x6F            ; DT    "Objeto: CARRO   ",0
+009E  343A  retlw  0x3A            ; DT    "Objeto: CARRO   ",0
+009F  3420  retlw  0x20            ; DT    "Objeto: CARRO   ",0
+00A0  3443  retlw  0x43            ; DT    "Objeto: CARRO   ",0
+00A1  3441  retlw  0x41            ; DT    "Objeto: CARRO   ",0
+00A2  3452  retlw  0x52            ; DT    "Objeto: CARRO   ",0
+00A3  3452  retlw  0x52            ; DT    "Objeto: CARRO   ",0
+00A4  344F  retlw  0x4F            ; DT    "Objeto: CARRO   ",0
+00A5  3420  retlw  0x20            ; DT    "Objeto: CARRO   ",0
+00A6  3420  retlw  0x20            ; DT    "Objeto: CARRO   ",0
+00A7  3420  retlw  0x20            ; DT    "Objeto: CARRO   ",0
+00A8  3400  retlw  0x00            ; DT    "Objeto: CARRO   ",0
+00A9  344F  retlw  0x4F            ; DT    "Objeto: MOTO    ",0
+00AA  3462  retlw  0x62            ; DT    "Objeto: MOTO    ",0
+00AB  346A  retlw  0x6A            ; DT    "Objeto: MOTO    ",0
+00AC  3465  retlw  0x65            ; DT    "Objeto: MOTO    ",0
+00AD  3474  retlw  0x74            ; DT    "Objeto: MOTO    ",0
+00AE  346F  retlw  0x6F            ; DT    "Objeto: MOTO    ",0
+00AF  343A  retlw  0x3A            ; DT    "Objeto: MOTO    ",0
+00B0  3420  retlw  0x20            ; DT    "Objeto: MOTO    ",0
+00B1  344D  retlw  0x4D            ; DT    "Objeto: MOTO    ",0
+00B2  344F  retlw  0x4F            ; DT    "Objeto: MOTO    ",0
+00B3  3454  retlw  0x54            ; DT    "Objeto: MOTO    ",0
+00B4  344F  retlw  0x4F            ; DT    "Objeto: MOTO    ",0
+00B5  3420  retlw  0x20            ; DT    "Objeto: MOTO    ",0
+00B6  3420  retlw  0x20            ; DT    "Objeto: MOTO    ",0
+00B7  3420  retlw  0x20            ; DT    "Objeto: MOTO    ",0
+00B8  3420  retlw  0x20            ; DT    "Objeto: MOTO    ",0
+00B9  3400  retlw  0x00            ; DT    "Objeto: MOTO    ",0
+00BA  344F  retlw  0x4F            ; DT    "Objeto: PERSONA ",0
+00BB  3462  retlw  0x62            ; DT    "Objeto: PERSONA ",0
+00BC  346A  retlw  0x6A            ; DT    "Objeto: PERSONA ",0
+00BD  3465  retlw  0x65            ; DT    "Objeto: PERSONA ",0
+00BE  3474  retlw  0x74            ; DT    "Objeto: PERSONA ",0
+00BF  346F  retlw  0x6F            ; DT    "Objeto: PERSONA ",0
+00C0  343A  retlw  0x3A            ; DT    "Objeto: PERSONA ",0
+00C1  3420  retlw  0x20            ; DT    "Objeto: PERSONA ",0
+00C2  3450  retlw  0x50            ; DT    "Objeto: PERSONA ",0
+00C3  3445  retlw  0x45            ; DT    "Objeto: PERSONA ",0
+00C4  3452  retlw  0x52            ; DT    "Objeto: PERSONA ",0
+00C5  3453  retlw  0x53            ; DT    "Objeto: PERSONA ",0
+00C6  344F  retlw  0x4F            ; DT    "Objeto: PERSONA ",0
+00C7  344E  retlw  0x4E            ; DT    "Objeto: PERSONA ",0
+00C8  3441  retlw  0x41            ; DT    "Objeto: PERSONA ",0
+00C9  3420  retlw  0x20            ; DT    "Objeto: PERSONA ",0
+00CA  3400  retlw  0x00            ; DT    "Objeto: PERSONA ",0
+00CB  344F  retlw  0x4F            ; DT    "Objeto: ninguno ",0
+00CC  3462  retlw  0x62            ; DT    "Objeto: ninguno ",0
+00CD  346A  retlw  0x6A            ; DT    "Objeto: ninguno ",0
+00CE  3465  retlw  0x65            ; DT    "Objeto: ninguno ",0
+00CF  3474  retlw  0x74            ; DT    "Objeto: ninguno ",0
+00D0  346F  retlw  0x6F            ; DT    "Objeto: ninguno ",0
+00D1  343A  retlw  0x3A            ; DT    "Objeto: ninguno ",0
+00D2  3420  retlw  0x20            ; DT    "Objeto: ninguno ",0
+00D3  346E  retlw  0x6E            ; DT    "Objeto: ninguno ",0
+00D4  3469  retlw  0x69            ; DT    "Objeto: ninguno ",0
+00D5  346E  retlw  0x6E            ; DT    "Objeto: ninguno ",0
+00D6  3467  retlw  0x67            ; DT    "Objeto: ninguno ",0
+00D7  3475  retlw  0x75            ; DT    "Objeto: ninguno ",0
+00D8  346E  retlw  0x6E            ; DT    "Objeto: ninguno ",0
+00D9  346F  retlw  0x6F            ; DT    "Objeto: ninguno ",0
+00DA  3420  retlw  0x20            ; DT    "Objeto: ninguno ",0
+00DB  3400  retlw  0x00            ; DT    "Objeto: ninguno ",0
+00DC  3450  retlw  0x50            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00DD  3449  retlw  0x49            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00DE  3443  retlw  0x43            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00DF  3420  retlw  0x20            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E0  346C  retlw  0x6C            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E1  3469  retlw  0x69            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E2  3473  retlw  0x73            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E3  3474  retlw  0x74            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E4  346F  retlw  0x6F            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E5  343A  retlw  0x3A            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E6  3420  retlw  0x20            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E7  3465  retlw  0x65            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E8  346E  retlw  0x6E            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00E9  3476  retlw  0x76            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00EA  3469  retlw  0x69            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00EB  3465  retlw  0x65            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00EC  3420  retlw  0x20            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00ED  3443  retlw  0x43            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00EE  342C  retlw  0x2C            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00EF  3420  retlw  0x20            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F0  344D  retlw  0x4D            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F1  342C  retlw  0x2C            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F2  3420  retlw  0x20            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F3  3450  retlw  0x50            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F4  3420  retlw  0x20            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F5  346F  retlw  0x6F            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F6  3420  retlw  0x20            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F7  344E  retlw  0x4E            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F8  340D  retlw  0x0D            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00F9  340A  retlw  0x0A            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00FA  3400  retlw  0x00            ; DT    "PIC listo: envie C, M, P o N",13,10,0
+00FB  00E8  movwf  0x68            ; movwf   R_MS
+00FC  30F9  movlw  0xF9            ; movlw   249
+00FD  00E9  movwf  0x69            ; movwf   R_US
+00FE  0000  nop                    ; nop
+00FF  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+0100  28FE  goto   0x0FE           ; goto    RMS2
+0101  0BE8  decfsz 0x68,F          ; decfsz  R_MS,F
+0102  28FC  goto   0x0FC           ; goto    RMS1
+0103  0008  return                 ; return
+0104  300F  movlw  0x0F            ; movlw   15
+0105  00E9  movwf  0x69            ; movwf   R_US
+0106  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+0107  2906  goto   0x106           ; goto    R50
+0108  0008  return                 ; return
+0109  1683  bsf    STATUS,5        ; BANKSEL TRISD
+010A  1303  bcf    STATUS,6        ; BANKSEL TRISD
+010B  0188  clrf   PORTD           ; clrf    TRISD
+010C  1283  bcf    STATUS,5        ; BANKSEL PORTD
+010D  1303  bcf    STATUS,6        ; BANKSEL PORTD
+010E  0188  clrf   PORTD           ; clrf    PORTD
+010F  3014  movlw  0x14            ; movlw   20
+0110  20FB  call   0x0FB           ; call    RETARDO_MS
+0111  3030  movlw  0x30            ; movlw   0x30
+0112  2138  call   0x138           ; call    LCD_NIB
+0113  3005  movlw  0x05            ; movlw   5
+0114  20FB  call   0x0FB           ; call    RETARDO_MS
+0115  3030  movlw  0x30            ; movlw   0x30
+0116  2138  call   0x138           ; call    LCD_NIB
+0117  2104  call   0x104           ; call    RETARDO_50US
+0118  2104  call   0x104           ; call    RETARDO_50US
+0119  3030  movlw  0x30            ; movlw   0x30
+011A  2138  call   0x138           ; call    LCD_NIB
+011B  2104  call   0x104           ; call    RETARDO_50US
+011C  3020  movlw  0x20            ; movlw   0x20
+011D  2138  call   0x138           ; call    LCD_NIB
+011E  2104  call   0x104           ; call    RETARDO_50US
+011F  3028  movlw  0x28            ; movlw   0x28
+0120  2127  call   0x127           ; call    LCD_CMD
+0121  300C  movlw  0x0C            ; movlw   0x0C
+0122  2127  call   0x127           ; call    LCD_CMD
+0123  3006  movlw  0x06            ; movlw   0x06
+0124  2127  call   0x127           ; call    LCD_CMD
+0125  3001  movlw  0x01            ; movlw   0x01
+0126  2927  goto   0x127           ; goto    LCD_CMD
+0127  1008  bcf    PORTD,0         ; bcf     PORTD,0
+0128  292B  goto   0x12B           ; goto    LCD_BYTE
+0129  3E30  addlw  0x30            ; addlw   '0'
+012A  1408  bsf    PORTD,0         ; bsf     PORTD,0
+012B  00EB  movwf  0x6B            ; movwf   LCD_DAT
+012C  2138  call   0x138           ; call    LCD_NIB
+012D  0E6B  swapf  0x6B,W          ; swapf   LCD_DAT,W
+012E  2138  call   0x138           ; call    LCD_NIB
+012F  2104  call   0x104           ; call    RETARDO_50US
+0130  1808  btfsc  PORTD,0         ; btfsc   PORTD,0
+0131  0008  return                 ; return
+0132  3003  movlw  0x03            ; movlw   3
+0133  026B  subwf  0x6B,W          ; subwf   LCD_DAT,W
+0134  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0135  0008  return                 ; return
+0136  3002  movlw  0x02            ; movlw   2
+0137  28FB  goto   0x0FB           ; goto    RETARDO_MS
+0138  39F0  andlw  0xF0            ; andlw   0xF0
+0139  00EA  movwf  0x6A            ; movwf   LCD_TMP
+013A  0808  movf   PORTD,W         ; movf    PORTD,W
+013B  390F  andlw  0x0F            ; andlw   0x0F
+013C  046A  iorwf  0x6A,W          ; iorwf   LCD_TMP,W
+013D  0088  movwf  PORTD           ; movwf   PORTD
+013E  1488  bsf    PORTD,1         ; bsf     PORTD,1
+013F  0000  nop                    ; nop
+0140  1088  bcf    PORTD,1         ; bcf     PORTD,1
+0141  0008  return                 ; return
+0142  214B  call   0x14B           ; call    LEER_TABLA
+0143  3800  iorlw  0x00            ; iorlw   0
+0144  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0145  0008  return                 ; return
+0146  212A  call   0x12A           ; call    LCD_DATO
+0147  0AED  incf   0x6D,F          ; incf    PTR_L,F
+0148  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0149  0AEC  incf   0x6C,F          ; incf    PTR_H,F
+014A  2942  goto   0x142           ; goto    LCD_CADENA
+014B  086C  movf   0x6C,W          ; movf    PTR_H,W
+014C  008A  movwf  PCLATH          ; movwf   PCLATH
+014D  086D  movf   0x6D,W          ; movf    PTR_L,W
+014E  0082  movwf  PCL             ; movwf   PCL

@@ -1,0 +1,29 @@
+0000  2801  goto 0x001             ; goto    inicio
+0001  1683  bsf 0x03,5             ; bsf/bcf STATUS,RP0
+0002  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+0003  0186  clrf 0x06              ; clrf    TRISB           ; PORTB: las 8 líneas como salidas
+0004  1283  bcf 0x03,5             ; bsf/bcf STATUS,RP0
+0005  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+0006  3001  movlw 0x01             ; movlw   b'00000001'
+0007  0086  movwf 0x06             ; movwf   PORTB           ; enciende RB0
+0008  2013  call 0x013             ; izq     call    retardo         ; desplaza hacia RB7
+0009  1003  bcf 0x03,0             ; bcf     STATUS,C
+000A  0D86  rlf 0x06,F             ; rlf     PORTB,F
+000B  1F86  btfss 0x06,7           ; btfss   PORTB,7
+000C  2808  goto 0x008             ; goto    izq
+000D  2013  call 0x013             ; der     call    retardo         ; desplaza hacia RB0
+000E  1003  bcf 0x03,0             ; bcf     STATUS,C
+000F  0C86  rrf 0x06,F             ; rrf     PORTB,F
+0010  1C06  btfss 0x06,0           ; btfss   PORTB,0
+0011  280D  goto 0x00D             ; goto    der
+0012  2808  goto 0x008             ; goto    izq
+0013  3064  movlw 0x64             ; retardo movlw   d'100'
+0014  00A1  movwf 0x21             ; movwf   d3
+0015  30F9  movlw 0xF9             ; r1      movlw   d'249'          ; 249 × 4 ciclos ≈ 1 ms
+0016  00A0  movwf 0x20             ; movwf   d1
+0017  0000  nop                    ; r2      nop
+0018  0BA0  decfsz 0x20,F          ; decfsz  d1,F
+0019  2817  goto 0x017             ; goto    r2
+001A  0BA1  decfsz 0x21,F          ; decfsz  d3,F
+001B  2815  goto 0x015             ; goto    r1
+001C  0008  return                 ; return

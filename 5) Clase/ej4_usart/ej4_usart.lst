@@ -1,0 +1,54 @@
+0000  2815  goto 0x015             ; goto    inicio
+0001  0782  addwf 0x02,F           ; mensaje addwf   PCL,F
+0002  3450  retlw 0x50             ; retlw 0x50
+0003  3449  retlw 0x49             ; retlw 0x49
+0004  3443  retlw 0x43             ; retlw 0x43
+0005  3431  retlw 0x31             ; retlw 0x31
+0006  3436  retlw 0x36             ; retlw 0x36
+0007  3446  retlw 0x46             ; retlw 0x46
+0008  3438  retlw 0x38             ; retlw 0x38
+0009  3437  retlw 0x37             ; retlw 0x37
+000A  3437  retlw 0x37             ; retlw 0x37
+000B  3441  retlw 0x41             ; retlw 0x41
+000C  3420  retlw 0x20             ; retlw 0x20
+000D  346C  retlw 0x6C             ; retlw 0x6c
+000E  3469  retlw 0x69             ; retlw 0x69
+000F  3473  retlw 0x73             ; retlw 0x73
+0010  3474  retlw 0x74             ; retlw 0x74
+0011  346F  retlw 0x6F             ; retlw 0x6f
+0012  340D  retlw 0x0D             ; retlw 0x0D
+0013  340A  retlw 0x0A             ; retlw 0x0A
+0014  3400  retlw 0x00             ; retlw 0
+0015  1683  bsf 0x03,5             ; bsf/bcf STATUS,RP0
+0016  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+0017  1307  bcf 0x07,6             ; bcf     TRISC,6         ; TX salida
+0018  1787  bsf 0x07,7             ; bsf     TRISC,7         ; RX entrada
+0019  0186  clrf 0x06              ; clrf    TRISB
+001A  3019  movlw 0x19             ; movlw   d'25'
+001B  0099  movwf 0x19             ; movwf   SPBRG           ; 4 MHz / (16 · 26) = 9615 baudios
+001C  3024  movlw 0x24             ; movlw   b'00100100'     ; TXEN = 1, BRGH = 1, asíncrono
+001D  0098  movwf 0x18             ; movwf   TXSTA
+001E  1283  bcf 0x03,5             ; bsf/bcf STATUS,RP0
+001F  1303  bcf 0x03,6             ; bsf/bcf STATUS,RP1
+0020  3090  movlw 0x90             ; movlw   b'10010000'     ; SPEN = 1, CREN = 1
+0021  0098  movwf 0x18             ; movwf   RCSTA
+0022  0186  clrf 0x06              ; clrf    PORTB
+0023  01A0  clrf 0x20              ; clrf    indice
+0024  0820  movf 0x20,W            ; enviar  movf    indice,W
+0025  2001  call 0x001             ; call    mensaje
+0026  3800  iorlw 0x00             ; iorlw   0               ; ¿fin del texto?
+0027  1903  btfsc 0x03,2           ; btfsc   STATUS,Z
+0028  282C  goto 0x02C             ; goto    eco
+0029  2032  call 0x032             ; call    tx
+002A  0AA0  incf 0x20,F            ; incf    indice,F
+002B  2824  goto 0x024             ; goto    enviar
+002C  1E8C  btfss 0x0C,5           ; eco     btfss   PIR1,RCIF       ; espera un carácter
+002D  282C  goto 0x02C             ; goto    eco
+002E  081A  movf 0x1A,W            ; movf    RCREG,W
+002F  0086  movwf 0x06             ; movwf   PORTB           ; lo muestra en los LEDs
+0030  2032  call 0x032             ; call    tx              ; y lo devuelve
+0031  282C  goto 0x02C             ; goto    eco
+0032  1E0C  btfss 0x0C,4           ; tx      btfss   PIR1,TXIF       ; espera que TXREG esté libre
+0033  2832  goto 0x032             ; goto    tx
+0034  0099  movwf 0x19             ; movwf   TXREG
+0035  0008  return                 ; return

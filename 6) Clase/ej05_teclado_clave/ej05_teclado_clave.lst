@@ -1,0 +1,343 @@
+0000  2805  goto   0x005           ; goto    INICIO
+0005  1683  bsf    STATUS,5        ; BANKSEL OPTION_REG
+0006  1303  bcf    STATUS,6        ; BANKSEL OPTION_REG
+0007  1381  bcf    TMR0,7          ; bcf     OPTION_REG,NOT_RBPU
+0008  30F0  movlw  0xF0            ; movlw   0xF0
+0009  0086  movwf  PORTB           ; movwf   TRISB
+000A  30F8  movlw  0xF8            ; movlw   0xF8
+000B  0087  movwf  PORTC           ; movwf   TRISC
+000C  1283  bcf    STATUS,5        ; BANKSEL PORTC
+000D  1303  bcf    STATUS,6        ; BANKSEL PORTC
+000E  0187  clrf   PORTC           ; clrf    PORTC
+000F  01A6  clrf   0x26            ; clrf    INTENTOS
+0010  2115  call   0x115           ; call    LCD_INIT
+0011  0187  clrf   PORTC           ; clrf    PORTC
+0012  01A5  clrf   0x25            ; clrf    N
+0013  3001  movlw  0x01            ; movlw   0x01
+0014  2133  call   0x133           ; call    LCD_CMD
+0015  3000  movlw  0x00            ; movlw   HIGH TXT_CLAVE
+0016  00EC  movwf  0x6C            ; movwf   PTR_H
+0017  30C3  movlw  0xC3            ; movlw   LOW TXT_CLAVE
+0018  00ED  movwf  0x6D            ; movwf   PTR_L
+0019  214E  call   0x14E           ; call    LCD_CADENA
+001A  30C0  movlw  0xC0            ; movlw   0xC0
+001B  2133  call   0x133           ; call    LCD_CMD
+001C  303E  movlw  0x3E            ; movlw   '>'
+001D  2136  call   0x136           ; call    LCD_DATO
+001E  3020  movlw  0x20            ; movlw   ' '
+001F  2136  call   0x136           ; call    LCD_DATO
+0020  208D  call   0x08D           ; call    ESCANEAR
+0021  3800  iorlw  0x00            ; iorlw   0
+0022  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0023  2820  goto   0x020           ; goto    LAZO
+0024  00A0  movwf  0x20            ; movwf   TECLA
+0025  3014  movlw  0x14            ; movlw   20
+0026  2107  call   0x107           ; call    RETARDO_MS
+0027  208D  call   0x08D           ; call    ESCANEAR
+0028  3800  iorlw  0x00            ; iorlw   0
+0029  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+002A  2827  goto   0x027           ; goto    SOLTAR
+002B  3014  movlw  0x14            ; movlw   20
+002C  2107  call   0x107           ; call    RETARDO_MS
+002D  0820  movf   0x20,W          ; movf    TECLA,W
+002E  3A43  xorlw  0x43            ; xorlw   'C'
+002F  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0030  2811  goto   0x011           ; goto    NUEVA
+0031  0820  movf   0x20,W          ; movf    TECLA,W
+0032  3A3D  xorlw  0x3D            ; xorlw   '='
+0033  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0034  2849  goto   0x049           ; goto    VERIFICAR
+0035  3030  movlw  0x30            ; movlw   '0'
+0036  0220  subwf  0x20,W          ; subwf   TECLA,W
+0037  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+0038  2820  goto   0x020           ; goto    LAZO
+0039  3C09  sublw  0x09            ; sublw   9
+003A  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+003B  2820  goto   0x020           ; goto    LAZO
+003C  3004  movlw  0x04            ; movlw   4
+003D  0225  subwf  0x25,W          ; subwf   N,W
+003E  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+003F  2820  goto   0x020           ; goto    LAZO
+0040  3028  movlw  0x28            ; movlw   CLAVE
+0041  0725  addwf  0x25,W          ; addwf   N,W
+0042  0084  movwf  FSR             ; movwf   FSR
+0043  0820  movf   0x20,W          ; movf    TECLA,W
+0044  0080  movwf  INDF            ; movwf   INDF
+0045  0AA5  incf   0x25,F          ; incf    N,F
+0046  302A  movlw  0x2A            ; movlw   '*'
+0047  2136  call   0x136           ; call    LCD_DATO
+0048  2820  goto   0x020           ; goto    LAZO
+0049  3004  movlw  0x04            ; movlw   4
+004A  0625  xorwf  0x25,W          ; xorwf   N,W
+004B  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+004C  2867  goto   0x067           ; goto    MAL
+004D  0828  movf   0x28,W          ; movf    CLAVE+0,W
+004E  3A31  xorlw  0x31            ; xorlw   '1'
+004F  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+0050  2867  goto   0x067           ; goto    MAL
+0051  0829  movf   0x29,W          ; movf    CLAVE+1,W
+0052  3A32  xorlw  0x32            ; xorlw   '2'
+0053  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+0054  2867  goto   0x067           ; goto    MAL
+0055  082A  movf   0x2A,W          ; movf    CLAVE+2,W
+0056  3A33  xorlw  0x33            ; xorlw   '3'
+0057  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+0058  2867  goto   0x067           ; goto    MAL
+0059  082B  movf   0x2B,W          ; movf    CLAVE+3,W
+005A  3A34  xorlw  0x34            ; xorlw   '4'
+005B  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+005C  2867  goto   0x067           ; goto    MAL
+005D  01A6  clrf   0x26            ; clrf    INTENTOS
+005E  3005  movlw  0x05            ; movlw   b'00000101'
+005F  0087  movwf  PORTC           ; movwf   PORTC
+0060  3000  movlw  0x00            ; movlw   HIGH TXT_OK
+0061  00EC  movwf  0x6C            ; movwf   PTR_H
+0062  30D4  movlw  0xD4            ; movlw   LOW TXT_OK
+0063  2083  call   0x083           ; call    MENSAJE
+0064  300C  movlw  0x0C            ; movlw   12
+0065  2087  call   0x087           ; call    ESPERAR
+0066  2811  goto   0x011           ; goto    NUEVA
+0067  3002  movlw  0x02            ; movlw   b'00000010'
+0068  0087  movwf  PORTC           ; movwf   PORTC
+0069  0AA6  incf   0x26,F          ; incf    INTENTOS,F
+006A  3003  movlw  0x03            ; movlw   3
+006B  0226  subwf  0x26,W          ; subwf   INTENTOS,W
+006C  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+006D  2875  goto   0x075           ; goto    BLOQUEO
+006E  3000  movlw  0x00            ; movlw   HIGH TXT_MAL
+006F  00EC  movwf  0x6C            ; movwf   PTR_H
+0070  30E5  movlw  0xE5            ; movlw   LOW TXT_MAL
+0071  2083  call   0x083           ; call    MENSAJE
+0072  3008  movlw  0x08            ; movlw   8
+0073  2087  call   0x087           ; call    ESPERAR
+0074  2811  goto   0x011           ; goto    NUEVA
+0075  01A6  clrf   0x26            ; clrf    INTENTOS
+0076  3000  movlw  0x00            ; movlw   HIGH TXT_BLOQ
+0077  00EC  movwf  0x6C            ; movwf   PTR_H
+0078  30F6  movlw  0xF6            ; movlw   LOW TXT_BLOQ
+0079  2083  call   0x083           ; call    MENSAJE
+007A  3014  movlw  0x14            ; movlw   20
+007B  00A7  movwf  0x27            ; movwf   VECES
+007C  3002  movlw  0x02            ; movlw   b'00000010'
+007D  0687  xorwf  PORTC,F         ; xorwf   PORTC,F
+007E  3002  movlw  0x02            ; movlw   2
+007F  2087  call   0x087           ; call    ESPERAR
+0080  0BA7  decfsz 0x27,F          ; decfsz  VECES,F
+0081  287C  goto   0x07C           ; goto    PARPADEO
+0082  2811  goto   0x011           ; goto    NUEVA
+0083  00ED  movwf  0x6D            ; movwf   PTR_L
+0084  30C0  movlw  0xC0            ; movlw   0xC0
+0085  2133  call   0x133           ; call    LCD_CMD
+0086  294E  goto   0x14E           ; goto    LCD_CADENA
+0087  00A4  movwf  0x24            ; movwf   AUX
+0088  30FA  movlw  0xFA            ; movlw   250
+0089  2107  call   0x107           ; call    RETARDO_MS
+008A  0BA4  decfsz 0x24,F          ; decfsz  AUX,F
+008B  2888  goto   0x088           ; goto    ESP1
+008C  0008  return                 ; return
+008D  01A1  clrf   0x21            ; clrf    FILA
+008E  30FE  movlw  0xFE            ; movlw   b'11111110'
+008F  00A3  movwf  0x23            ; movwf   MASCARA
+0090  0823  movf   0x23,W          ; movf    MASCARA,W
+0091  0086  movwf  PORTB           ; movwf   PORTB
+0092  0000  nop                    ; nop
+0093  0000  nop                    ; nop
+0094  0E06  swapf  PORTB,W         ; swapf   PORTB,W
+0095  390F  andlw  0x0F            ; andlw   0x0F
+0096  3A0F  xorlw  0x0F            ; xorlw   0x0F
+0097  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+0098  28A1  goto   0x0A1           ; goto    HAY
+0099  0AA1  incf   0x21,F          ; incf    FILA,F
+009A  1403  bsf    STATUS,0        ; bsf     STATUS,C
+009B  0DA3  rlf    0x23,F          ; rlf     MASCARA,F
+009C  3004  movlw  0x04            ; movlw   4
+009D  0621  xorwf  0x21,W          ; xorwf   FILA,W
+009E  1D03  btfss  STATUS,2        ; btfss   STATUS,Z
+009F  2890  goto   0x090           ; goto    ESC1
+00A0  3400  retlw  0x00            ; retlw   0
+00A1  00A4  movwf  0x24            ; movwf   AUX
+00A2  01A2  clrf   0x22            ; clrf    COL
+00A3  0CA4  rrf    0x24,F          ; rrf     AUX,F
+00A4  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+00A5  28A8  goto   0x0A8           ; goto    HAY2
+00A6  0AA2  incf   0x22,F          ; incf    COL,F
+00A7  28A3  goto   0x0A3           ; goto    HAY1
+00A8  1003  bcf    STATUS,0        ; bcf     STATUS,C
+00A9  0DA1  rlf    0x21,F          ; rlf     FILA,F
+00AA  0D21  rlf    0x21,W          ; rlf     FILA,W
+00AB  0722  addwf  0x22,W          ; addwf   COL,W
+00AC  3EB3  addlw  0xB3            ; addlw   LOW TECLAS
+00AD  00ED  movwf  0x6D            ; movwf   PTR_L
+00AE  3000  movlw  0x00            ; movlw   HIGH TECLAS
+00AF  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+00B0  3E01  addlw  0x01            ; addlw   1
+00B1  00EC  movwf  0x6C            ; movwf   PTR_H
+00B2  2957  goto   0x157           ; goto    LEER_TABLA
+00B3  3437  retlw  0x37            ; DT    "789/456*123-C0=+"
+00B4  3438  retlw  0x38            ; DT    "789/456*123-C0=+"
+00B5  3439  retlw  0x39            ; DT    "789/456*123-C0=+"
+00B6  342F  retlw  0x2F            ; DT    "789/456*123-C0=+"
+00B7  3434  retlw  0x34            ; DT    "789/456*123-C0=+"
+00B8  3435  retlw  0x35            ; DT    "789/456*123-C0=+"
+00B9  3436  retlw  0x36            ; DT    "789/456*123-C0=+"
+00BA  342A  retlw  0x2A            ; DT    "789/456*123-C0=+"
+00BB  3431  retlw  0x31            ; DT    "789/456*123-C0=+"
+00BC  3432  retlw  0x32            ; DT    "789/456*123-C0=+"
+00BD  3433  retlw  0x33            ; DT    "789/456*123-C0=+"
+00BE  342D  retlw  0x2D            ; DT    "789/456*123-C0=+"
+00BF  3443  retlw  0x43            ; DT    "789/456*123-C0=+"
+00C0  3430  retlw  0x30            ; DT    "789/456*123-C0=+"
+00C1  343D  retlw  0x3D            ; DT    "789/456*123-C0=+"
+00C2  342B  retlw  0x2B            ; DT    "789/456*123-C0=+"
+00C3  3449  retlw  0x49            ; DT    "Ingrese la clave",0
+00C4  346E  retlw  0x6E            ; DT    "Ingrese la clave",0
+00C5  3467  retlw  0x67            ; DT    "Ingrese la clave",0
+00C6  3472  retlw  0x72            ; DT    "Ingrese la clave",0
+00C7  3465  retlw  0x65            ; DT    "Ingrese la clave",0
+00C8  3473  retlw  0x73            ; DT    "Ingrese la clave",0
+00C9  3465  retlw  0x65            ; DT    "Ingrese la clave",0
+00CA  3420  retlw  0x20            ; DT    "Ingrese la clave",0
+00CB  346C  retlw  0x6C            ; DT    "Ingrese la clave",0
+00CC  3461  retlw  0x61            ; DT    "Ingrese la clave",0
+00CD  3420  retlw  0x20            ; DT    "Ingrese la clave",0
+00CE  3463  retlw  0x63            ; DT    "Ingrese la clave",0
+00CF  346C  retlw  0x6C            ; DT    "Ingrese la clave",0
+00D0  3461  retlw  0x61            ; DT    "Ingrese la clave",0
+00D1  3476  retlw  0x76            ; DT    "Ingrese la clave",0
+00D2  3465  retlw  0x65            ; DT    "Ingrese la clave",0
+00D3  3400  retlw  0x00            ; DT    "Ingrese la clave",0
+00D4  3441  retlw  0x41            ; DT    "ACCESO CONCEDIDO",0
+00D5  3443  retlw  0x43            ; DT    "ACCESO CONCEDIDO",0
+00D6  3443  retlw  0x43            ; DT    "ACCESO CONCEDIDO",0
+00D7  3445  retlw  0x45            ; DT    "ACCESO CONCEDIDO",0
+00D8  3453  retlw  0x53            ; DT    "ACCESO CONCEDIDO",0
+00D9  344F  retlw  0x4F            ; DT    "ACCESO CONCEDIDO",0
+00DA  3420  retlw  0x20            ; DT    "ACCESO CONCEDIDO",0
+00DB  3443  retlw  0x43            ; DT    "ACCESO CONCEDIDO",0
+00DC  344F  retlw  0x4F            ; DT    "ACCESO CONCEDIDO",0
+00DD  344E  retlw  0x4E            ; DT    "ACCESO CONCEDIDO",0
+00DE  3443  retlw  0x43            ; DT    "ACCESO CONCEDIDO",0
+00DF  3445  retlw  0x45            ; DT    "ACCESO CONCEDIDO",0
+00E0  3444  retlw  0x44            ; DT    "ACCESO CONCEDIDO",0
+00E1  3449  retlw  0x49            ; DT    "ACCESO CONCEDIDO",0
+00E2  3444  retlw  0x44            ; DT    "ACCESO CONCEDIDO",0
+00E3  344F  retlw  0x4F            ; DT    "ACCESO CONCEDIDO",0
+00E4  3400  retlw  0x00            ; DT    "ACCESO CONCEDIDO",0
+00E5  3443  retlw  0x43            ; DT    "CLAVE INCORRECTA",0
+00E6  344C  retlw  0x4C            ; DT    "CLAVE INCORRECTA",0
+00E7  3441  retlw  0x41            ; DT    "CLAVE INCORRECTA",0
+00E8  3456  retlw  0x56            ; DT    "CLAVE INCORRECTA",0
+00E9  3445  retlw  0x45            ; DT    "CLAVE INCORRECTA",0
+00EA  3420  retlw  0x20            ; DT    "CLAVE INCORRECTA",0
+00EB  3449  retlw  0x49            ; DT    "CLAVE INCORRECTA",0
+00EC  344E  retlw  0x4E            ; DT    "CLAVE INCORRECTA",0
+00ED  3443  retlw  0x43            ; DT    "CLAVE INCORRECTA",0
+00EE  344F  retlw  0x4F            ; DT    "CLAVE INCORRECTA",0
+00EF  3452  retlw  0x52            ; DT    "CLAVE INCORRECTA",0
+00F0  3452  retlw  0x52            ; DT    "CLAVE INCORRECTA",0
+00F1  3445  retlw  0x45            ; DT    "CLAVE INCORRECTA",0
+00F2  3443  retlw  0x43            ; DT    "CLAVE INCORRECTA",0
+00F3  3454  retlw  0x54            ; DT    "CLAVE INCORRECTA",0
+00F4  3441  retlw  0x41            ; DT    "CLAVE INCORRECTA",0
+00F5  3400  retlw  0x00            ; DT    "CLAVE INCORRECTA",0
+00F6  3442  retlw  0x42            ; DT    "BLOQUEADO  10 s ",0
+00F7  344C  retlw  0x4C            ; DT    "BLOQUEADO  10 s ",0
+00F8  344F  retlw  0x4F            ; DT    "BLOQUEADO  10 s ",0
+00F9  3451  retlw  0x51            ; DT    "BLOQUEADO  10 s ",0
+00FA  3455  retlw  0x55            ; DT    "BLOQUEADO  10 s ",0
+00FB  3445  retlw  0x45            ; DT    "BLOQUEADO  10 s ",0
+00FC  3441  retlw  0x41            ; DT    "BLOQUEADO  10 s ",0
+00FD  3444  retlw  0x44            ; DT    "BLOQUEADO  10 s ",0
+00FE  344F  retlw  0x4F            ; DT    "BLOQUEADO  10 s ",0
+00FF  3420  retlw  0x20            ; DT    "BLOQUEADO  10 s ",0
+0100  3420  retlw  0x20            ; DT    "BLOQUEADO  10 s ",0
+0101  3431  retlw  0x31            ; DT    "BLOQUEADO  10 s ",0
+0102  3430  retlw  0x30            ; DT    "BLOQUEADO  10 s ",0
+0103  3420  retlw  0x20            ; DT    "BLOQUEADO  10 s ",0
+0104  3473  retlw  0x73            ; DT    "BLOQUEADO  10 s ",0
+0105  3420  retlw  0x20            ; DT    "BLOQUEADO  10 s ",0
+0106  3400  retlw  0x00            ; DT    "BLOQUEADO  10 s ",0
+0107  00E8  movwf  0x68            ; movwf   R_MS
+0108  30F9  movlw  0xF9            ; movlw   249
+0109  00E9  movwf  0x69            ; movwf   R_US
+010A  0000  nop                    ; nop
+010B  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+010C  290A  goto   0x10A           ; goto    RMS2
+010D  0BE8  decfsz 0x68,F          ; decfsz  R_MS,F
+010E  2908  goto   0x108           ; goto    RMS1
+010F  0008  return                 ; return
+0110  300F  movlw  0x0F            ; movlw   15
+0111  00E9  movwf  0x69            ; movwf   R_US
+0112  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+0113  2912  goto   0x112           ; goto    R50
+0114  0008  return                 ; return
+0115  1683  bsf    STATUS,5        ; BANKSEL TRISD
+0116  1303  bcf    STATUS,6        ; BANKSEL TRISD
+0117  0188  clrf   PORTD           ; clrf    TRISD
+0118  1283  bcf    STATUS,5        ; BANKSEL PORTD
+0119  1303  bcf    STATUS,6        ; BANKSEL PORTD
+011A  0188  clrf   PORTD           ; clrf    PORTD
+011B  3014  movlw  0x14            ; movlw   20
+011C  2107  call   0x107           ; call    RETARDO_MS
+011D  3030  movlw  0x30            ; movlw   0x30
+011E  2144  call   0x144           ; call    LCD_NIB
+011F  3005  movlw  0x05            ; movlw   5
+0120  2107  call   0x107           ; call    RETARDO_MS
+0121  3030  movlw  0x30            ; movlw   0x30
+0122  2144  call   0x144           ; call    LCD_NIB
+0123  2110  call   0x110           ; call    RETARDO_50US
+0124  2110  call   0x110           ; call    RETARDO_50US
+0125  3030  movlw  0x30            ; movlw   0x30
+0126  2144  call   0x144           ; call    LCD_NIB
+0127  2110  call   0x110           ; call    RETARDO_50US
+0128  3020  movlw  0x20            ; movlw   0x20
+0129  2144  call   0x144           ; call    LCD_NIB
+012A  2110  call   0x110           ; call    RETARDO_50US
+012B  3028  movlw  0x28            ; movlw   0x28
+012C  2133  call   0x133           ; call    LCD_CMD
+012D  300C  movlw  0x0C            ; movlw   0x0C
+012E  2133  call   0x133           ; call    LCD_CMD
+012F  3006  movlw  0x06            ; movlw   0x06
+0130  2133  call   0x133           ; call    LCD_CMD
+0131  3001  movlw  0x01            ; movlw   0x01
+0132  2933  goto   0x133           ; goto    LCD_CMD
+0133  1008  bcf    PORTD,0         ; bcf     PORTD,0
+0134  2937  goto   0x137           ; goto    LCD_BYTE
+0135  3E30  addlw  0x30            ; addlw   '0'
+0136  1408  bsf    PORTD,0         ; bsf     PORTD,0
+0137  00EB  movwf  0x6B            ; movwf   LCD_DAT
+0138  2144  call   0x144           ; call    LCD_NIB
+0139  0E6B  swapf  0x6B,W          ; swapf   LCD_DAT,W
+013A  2144  call   0x144           ; call    LCD_NIB
+013B  2110  call   0x110           ; call    RETARDO_50US
+013C  1808  btfsc  PORTD,0         ; btfsc   PORTD,0
+013D  0008  return                 ; return
+013E  3003  movlw  0x03            ; movlw   3
+013F  026B  subwf  0x6B,W          ; subwf   LCD_DAT,W
+0140  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0141  0008  return                 ; return
+0142  3002  movlw  0x02            ; movlw   2
+0143  2907  goto   0x107           ; goto    RETARDO_MS
+0144  39F0  andlw  0xF0            ; andlw   0xF0
+0145  00EA  movwf  0x6A            ; movwf   LCD_TMP
+0146  0808  movf   PORTD,W         ; movf    PORTD,W
+0147  390F  andlw  0x0F            ; andlw   0x0F
+0148  046A  iorwf  0x6A,W          ; iorwf   LCD_TMP,W
+0149  0088  movwf  PORTD           ; movwf   PORTD
+014A  1488  bsf    PORTD,1         ; bsf     PORTD,1
+014B  0000  nop                    ; nop
+014C  1088  bcf    PORTD,1         ; bcf     PORTD,1
+014D  0008  return                 ; return
+014E  2157  call   0x157           ; call    LEER_TABLA
+014F  3800  iorlw  0x00            ; iorlw   0
+0150  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0151  0008  return                 ; return
+0152  2136  call   0x136           ; call    LCD_DATO
+0153  0AED  incf   0x6D,F          ; incf    PTR_L,F
+0154  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0155  0AEC  incf   0x6C,F          ; incf    PTR_H,F
+0156  294E  goto   0x14E           ; goto    LCD_CADENA
+0157  086C  movf   0x6C,W          ; movf    PTR_H,W
+0158  008A  movwf  PCLATH          ; movwf   PCLATH
+0159  086D  movf   0x6D,W          ; movf    PTR_L,W
+015A  0082  movwf  PCL             ; movwf   PCL
