@@ -1,0 +1,90 @@
+PIC16F877A · 12 EJEMPLOS: USART, I2C, SPI, PWM, INTERRUPCIONES E ISR, MULTITAREA
+====================================================================================
+
+Cada carpeta trae:
+  ejNN_*.hex            programa listo para cargar en el PIC (generado desde la versión en ensamblador)
+  ejNN_*.asm            fuente en ensamblador, autónoma (sintaxis MPASM)
+  ejNN_*.c              la misma aplicación en C para MPLAB X + XC8
+  ejNN_*.lst            listado: dirección, código de máquina y mnemónico
+  esquematico.png/.svg  circuito para dibujar en Proteus o montar en protoboard
+
+La carpeta pc/ trae dos programas en Python para hablar con el PIC por el puerto serie.
+
+Cómo correrlos en Proteus (8.x)
+-------------------------------
+1. Nuevo proyecto (modo esquemático). Con el botón P (Pick Devices) busque los componentes de la lista de abajo.
+2. Dibuje el circuito del esquemático. Las etiquetas de red (Wire Label) con el mismo nombre son el mismo cable
+   (TX, RX, AN1, LATIDO, OSC-A, DIG0…). VDD/VSS del PIC ya están conectados internamente en Proteus;
+   en el montaje real conecte los dos pares (11-32 y 12-31) y ponga el cristal con sus condensadores de 22 pF.
+3. Doble clic sobre el PIC:  Program File = el .hex  ·  Processor Clock Frequency = 4MHz  (los 12 ejemplos).
+4. LCD LM016L: VSS, VEE y RW a tierra, VDD a +5 V. Modo de 4 bits: D0-D3 quedan sin conectar.
+5. Play.
+
+Componentes por ejemplo (nombres de la biblioteca de Proteus)
+-------------------------------------------------------------
+USART
+ 1. Terminal de comandos con interrupción de recepción
+    PIC16F877A, VIRTUAL TERMINAL (o COMPIM), LED-RED ×8, RES 330 Ω ×8
+ 2. Telemetría al PC cada 250 ms (AN0 y LM35)
+    PIC16F877A, VIRTUAL TERMINAL (o COMPIM), POT-HG 10 kΩ, LM35, LED-GREEN, RES 330 Ω
+I2C
+ 3. 8 LED en un expansor PCF8574 (dirección 0x40)
+    PIC16F877A, PCF8574, LED-RED ×9, RES 330 Ω ×9, RES 4,7 kΩ ×2 (pull-ups), BUTTON
+ 4. Reloj de tiempo real DS1307 en LCD
+    PIC16F877A, DS1307, CRYSTAL 32,768 kHz, LM016L, RES 4,7 kΩ ×3, LED-YELLOW, RES 330 Ω, BUTTON
+SPI
+ 5. 8 LED con un registro de desplazamiento 74HC595
+    PIC16F877A, 74HC595, LED-GREEN ×8, RES 330 Ω ×8, POT-HG, BUTTON
+ 6. Display de 8 dígitos con MAX7219
+    PIC16F877A, MAX7219, 7SEG-MPX8-CC-BLUE, RES 10 kΩ (ISET), POT-HG
+PWM
+ 7. Dos canales de 10 bits a 1 kHz (CCP1 y CCP2)
+    PIC16F877A, POT-HG ×2, LED ×2, RES 330 Ω ×2, LM016L, OSCILLOSCOPE (instrumento virtual)
+ 8. Melodía en un parlante
+    PIC16F877A, SPEAKER (o SOUNDER), RES 100 Ω, LED-GREEN, RES 330 Ω, BUTTON
+INTERRUPCIONES E ISR
+ 9. Cuatro fuentes en una sola ISR: INT, cambio en RB4-RB7, ADC y TMR0
+    PIC16F877A, BUTTON ×5, POT-HG, LED-RED, RES 330 Ω, LM016L
+10. Reloj HH:MM:SS con TMR1
+    PIC16F877A, BUTTON ×2, LED-RED, RES 330 Ω, LM016L
+MULTITAREA
+11. Planificador cooperativo con tick de 10 ms (5 tareas)
+    PIC16F877A, LED ×3, RES 330 Ω ×3, POT-HG, BUTTON, LM016L
+12. Semáforo + latido + comandos por USART
+    PIC16F877A, LED ×7 (rojo, amarillo, verde, rojo, verde, blanco, azul), RES 330 Ω ×7, VIRTUAL TERMINAL
+
+Notas por ejemplo
+-----------------
+ 1, 2, 12  VIRTUAL TERMINAL: RXD a RC6/TX y TXD a RC7/RX (se cruzan). Propiedades: 9600 baudios, 8 bits, sin paridad,
+           1 de parada. Para escribir en él, haga clic dentro de la ventana del terminal durante la simulación.
+           Si no aparece: menú Debug → Virtual Terminal.
+           Para usar Python en vez del terminal: COMPIM (9600, 8N1) y un par de puertos virtuales
+           (com0com en Windows, p. ej. COM3 <-> COM4). COMPIM usa COM4 y el script usa COM3:
+               pip install pyserial matplotlib
+               python pc/terminal_pic.py --puerto COM3       (ejemplos 1 y 12)
+               python pc/graficar_serie.py --puerto COM3     (ejemplo 2, gráfica en vivo y archivo CSV)
+               python pc/graficar_serie.py --demo            (prueba sin PIC)
+           En el PIC real: conversor USB-serie TTL (CH340, CP2102) en RC6/TX y RC7/RX con tierra común.
+ 3, 4      I2C: SCL = RC3 y SDA = RC4, ambas con resistencia de 4,7 kΩ a +5 V (sin pull-ups el bus no funciona).
+           PCF8574 con A0 = A1 = A2 = 0 → dirección de 7 bits 0x20 → byte de escritura 0x40.
+           Los LED del PCF8574 se conectan a +5 V (el chip solo absorbe corriente): se encienden con 0.
+           Si el PCF8574 no responde (NACK) se enciende el LED de error en RC0.
+           Herramienta útil: I2C DEBUGGER (instrumento virtual) en SCL y SDA muestra cada trama.
+ 4         DS1307: dirección 0xD0/0xD1. Si el reloj está detenido (bit CH = 1) el PIC escribe 12:00:00 19/11/26.
+           VBAT a tierra (o a una pila de 3 V). SOUT da 1 Hz (necesita su pull-up). En Proteus el cristal es opcional.
+ 5         74HC595: DS = RC5/SDO, SH_CP = RC3/SCK, ST_CP = RC0 (latch), MR a +5 V, OE a tierra.
+ 6         MAX7219: DIN = RC5/SDO, CLK = RC3/SCK, LOAD = RC0. ISET con 10 kΩ a +5 V.
+           DIG0-DIG7 a los comunes 1-8 del display y SEG A-DP a los segmentos (por etiquetas).
+           Herramienta útil: SPI DEBUGGER en SCK, SDO y RC0.
+ 7         Osciloscopio: canal A en RC2/CCP1 y canal B en RC1/CCP2. Base de tiempo 0,2 ms/div: periodo de 1 ms.
+ 8         SPEAKER: active el sonido del PC. En hardware real excite el parlante con un transistor (BC547 + 1 kΩ).
+ Botones  Pulsadores a tierra (ejemplos 3, 4, 5, 8, 9, 10 y 11): el programa activa los pull-ups internos de PORTB (OPTION_REG, bit RBPU = 0).
+ 9         El LED de RC0 va por la etiqueta LATIDO (late con TMR0).
+
+Sobre los archivos
+------------------
+- Los .hex se generaron desde las versiones en ensamblador y se verificaron en un emulador del PIC16F877A con modelos
+  de los dispositivos (USART, bus I2C con PCF8574 y DS1307, 74HC595, MAX7219, LCD, PWM). No se probaron en Proteus.
+- Las versiones en C no se compilaron aquí (no hay XC8): compílelas en MPLAB X con XC8 para PIC16F877A.
+- No se incluye el proyecto de Proteus (.pdsprj): es un formato propietario que solo genera Proteus.
+- Para ensamblar los .asm: MPLAB X 5.35 o anterior (trae MPASM) o gpasm (gputils).

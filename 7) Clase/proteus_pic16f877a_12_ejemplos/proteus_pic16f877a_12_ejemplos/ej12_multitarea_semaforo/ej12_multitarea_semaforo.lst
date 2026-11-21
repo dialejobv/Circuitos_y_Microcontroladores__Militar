@@ -1,0 +1,390 @@
+0000  2829  goto   0x029           ; goto    INICIO
+0004  00F0  movwf  0x70            ; movwf   W_TEMP
+0005  0E03  swapf  STATUS,W        ; swapf   STATUS,W
+0006  0183  clrf   STATUS          ; clrf    STATUS
+0007  00F1  movwf  0x71            ; movwf   S_TEMP
+0008  080A  movf   PCLATH,W        ; movf    PCLATH,W
+0009  00F2  movwf  0x72            ; movwf   P_TEMP
+000A  018A  clrf   PCLATH          ; clrf    PCLATH
+000B  1D0B  btfss  INTCON,2        ; btfss   INTCON,T0IF
+000C  2817  goto   0x017           ; goto    ISR_RX
+000D  110B  bcf    INTCON,2        ; bcf     INTCON,T0IF
+000E  3006  movlw  0x06            ; movlw   6
+000F  0781  addwf  TMR0,F          ; addwf   TMR0,F
+0010  0AA1  incf   0x21,F          ; incf    MS10,F
+0011  300A  movlw  0x0A            ; movlw   10
+0012  0221  subwf  0x21,W          ; subwf   MS10,W
+0013  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+0014  2817  goto   0x017           ; goto    ISR_RX
+0015  01A1  clrf   0x21            ; clrf    MS10
+0016  0AA0  incf   0x20,F          ; incf    TICKS,F
+0017  1E8C  btfss  PIR1,5          ; btfss   PIR1,RCIF
+0018  281C  goto   0x01C           ; goto    FIN_ISR
+0019  081A  movf   RCREG,W         ; movf    RCREG,W
+001A  00A7  movwf  0x27            ; movwf   RXDATO
+001B  1428  bsf    0x28,0          ; bsf     RXFLAG,0
+001C  0872  movf   0x72,W          ; movf    P_TEMP,W
+001D  008A  movwf  PCLATH          ; movwf   PCLATH
+001E  0E71  swapf  0x71,W          ; swapf   S_TEMP,W
+001F  0083  movwf  STATUS          ; movwf   STATUS
+0020  0EF0  swapf  0x70,F          ; swapf   W_TEMP,F
+0021  0E70  swapf  0x70,W          ; swapf   W_TEMP,W
+0022  0009  retfie                 ; retfie
+0023  018A  clrf   PCLATH          ; clrf    PCLATH
+0024  0782  addwf  PCL,F           ; addwf   PCL,F
+0025  340C  retlw  0x0C            ; DT      b'00001100', b'00001010', b'00010001', b'00001001'
+0026  340A  retlw  0x0A            ; DT      b'00001100', b'00001010', b'00010001', b'00001001'
+0027  3411  retlw  0x11            ; DT      b'00001100', b'00001010', b'00010001', b'00001001'
+0028  3409  retlw  0x09            ; DT      b'00001100', b'00001010', b'00010001', b'00001001'
+0029  1683  bsf    STATUS,5        ; BANKSEL TRISB
+002A  1303  bcf    STATUS,6        ; BANKSEL TRISB
+002B  0186  clrf   PORTB           ; clrf    TRISB
+002C  3001  movlw  0x01            ; movlw   b'00000001'
+002D  0081  movwf  TMR0            ; movwf   OPTION_REG
+002E  1283  bcf    STATUS,5        ; BANKSEL PORTB
+002F  1303  bcf    STATUS,6        ; BANKSEL PORTB
+0030  0186  clrf   PORTB           ; clrf    PORTB
+0031  216B  call   0x16B           ; call    UART_INIT
+0032  1683  bsf    STATUS,5        ; BANKSEL PIE1
+0033  1303  bcf    STATUS,6        ; BANKSEL PIE1
+0034  168C  bsf    PIR1,5          ; bsf     PIE1,RCIE
+0035  1283  bcf    STATUS,5        ; BANKSEL PORTB
+0036  1303  bcf    STATUS,6        ; BANKSEL PORTB
+0037  01A0  clrf   0x20            ; clrf    TICKS
+0038  01A1  clrf   0x21            ; clrf    MS10
+0039  01A6  clrf   0x26            ; clrf    SOLICITUD
+003A  01A8  clrf   0x28            ; clrf    RXFLAG
+003B  01A5  clrf   0x25            ; clrf    TIEMPO
+003C  3000  movlw  0x00            ; movlw   VERDE
+003D  00A4  movwf  0x24            ; movwf   ESTADO
+003E  300A  movlw  0x0A            ; movlw   10
+003F  00A2  movwf  0x22            ; movwf   C_SEM
+0040  301E  movlw  0x1E            ; movlw   30
+0041  00A3  movwf  0x23            ; movwf   C_LAT
+0042  3000  movlw  0x00            ; movlw   HIGH TXT_HOLA
+0043  00EC  movwf  0x6C            ; movwf   PTR_H
+0044  30CE  movlw  0xCE            ; movlw   LOW TXT_HOLA
+0045  00ED  movwf  0x6D            ; movwf   PTR_L
+0046  217A  call   0x17A           ; call    TX_CADENA
+0047  20A3  call   0x0A3           ; call    PONER_LUCES
+0048  20AB  call   0x0AB           ; call    ANUNCIAR
+0049  30E0  movlw  0xE0            ; movlw   b'11100000'
+004A  008B  movwf  INTCON          ; movwf   INTCON
+004B  0820  movf   0x20,W          ; movf    TICKS,W
+004C  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+004D  284B  goto   0x04B           ; goto    LAZO
+004E  03A0  decf   0x20,F          ; decf    TICKS,F
+004F  205C  call   0x05C           ; call    TAREA_SERIE
+0050  0BA2  decfsz 0x22,F          ; decfsz  C_SEM,F
+0051  2855  goto   0x055           ; goto    L2
+0052  300A  movlw  0x0A            ; movlw   10
+0053  00A2  movwf  0x22            ; movwf   C_SEM
+0054  2071  call   0x071           ; call    TAREA_SEMAFORO
+0055  0BA3  decfsz 0x23,F          ; decfsz  C_LAT,F
+0056  284B  goto   0x04B           ; goto    LAZO
+0057  301E  movlw  0x1E            ; movlw   30
+0058  00A3  movwf  0x23            ; movwf   C_LAT
+0059  3080  movlw  0x80            ; movlw   b'10000000'
+005A  0686  xorwf  PORTB,F         ; xorwf   PORTB,F
+005B  284B  goto   0x04B           ; goto    LAZO
+005C  1C28  btfss  0x28,0          ; btfss   RXFLAG,0
+005D  0008  return                 ; return
+005E  1028  bcf    0x28,0          ; bcf     RXFLAG,0
+005F  0827  movf   0x27,W          ; movf    RXDATO,W
+0060  39DF  andlw  0xDF            ; andlw   0xDF
+0061  00A9  movwf  0x29            ; movwf   AUX
+0062  3A50  xorlw  0x50            ; xorlw   'P'
+0063  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0064  286A  goto   0x06A           ; goto    PEDIR
+0065  0829  movf   0x29,W          ; movf    AUX,W
+0066  3A53  xorlw  0x53            ; xorlw   'S'
+0067  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0068  28AB  goto   0x0AB           ; goto    ANUNCIAR
+0069  0008  return                 ; return
+006A  1426  bsf    0x26,0          ; bsf     SOLICITUD,0
+006B  1686  bsf    PORTB,5         ; bsf     PORTB,5
+006C  3001  movlw  0x01            ; movlw   HIGH TXT_PED
+006D  00EC  movwf  0x6C            ; movwf   PTR_H
+006E  3047  movlw  0x47            ; movlw   LOW TXT_PED
+006F  00ED  movwf  0x6D            ; movwf   PTR_L
+0070  297A  goto   0x17A           ; goto    TX_CADENA
+0071  0AA5  incf   0x25,F          ; incf    TIEMPO,F
+0072  0824  movf   0x24,W          ; movf    ESTADO,W
+0073  3A00  xorlw  0x00            ; xorlw   VERDE
+0074  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0075  2884  goto   0x084           ; goto    S_VERDE
+0076  0824  movf   0x24,W          ; movf    ESTADO,W
+0077  3A01  xorlw  0x01            ; xorlw   AMARILLO
+0078  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0079  2890  goto   0x090           ; goto    S_AMARILLO
+007A  0824  movf   0x24,W          ; movf    ESTADO,W
+007B  3A02  xorlw  0x02            ; xorlw   ROJO
+007C  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+007D  2898  goto   0x098           ; goto    S_ROJO
+007E  300A  movlw  0x0A            ; movlw   10
+007F  20A1  call   0x0A1           ; call    ES_HORA
+0080  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+0081  0008  return                 ; return
+0082  3000  movlw  0x00            ; movlw   VERDE
+0083  289D  goto   0x09D           ; goto    CAMBIAR
+0084  3050  movlw  0x50            ; movlw   80
+0085  20A1  call   0x0A1           ; call    ES_HORA
+0086  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0087  288E  goto   0x08E           ; goto    A_AMARILLO
+0088  1C26  btfss  0x26,0          ; btfss   SOLICITUD,0
+0089  0008  return                 ; return
+008A  301E  movlw  0x1E            ; movlw   30
+008B  20A1  call   0x0A1           ; call    ES_HORA
+008C  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+008D  0008  return                 ; return
+008E  3001  movlw  0x01            ; movlw   AMARILLO
+008F  289D  goto   0x09D           ; goto    CAMBIAR
+0090  3014  movlw  0x14            ; movlw   20
+0091  20A1  call   0x0A1           ; call    ES_HORA
+0092  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+0093  0008  return                 ; return
+0094  01A6  clrf   0x26            ; clrf    SOLICITUD
+0095  1286  bcf    PORTB,5         ; bcf     PORTB,5
+0096  3002  movlw  0x02            ; movlw   ROJO
+0097  289D  goto   0x09D           ; goto    CAMBIAR
+0098  3032  movlw  0x32            ; movlw   50
+0099  20A1  call   0x0A1           ; call    ES_HORA
+009A  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+009B  0008  return                 ; return
+009C  3003  movlw  0x03            ; movlw   DESPEJE
+009D  00A4  movwf  0x24            ; movwf   ESTADO
+009E  01A5  clrf   0x25            ; clrf    TIEMPO
+009F  20A3  call   0x0A3           ; call    PONER_LUCES
+00A0  28AB  goto   0x0AB           ; goto    ANUNCIAR
+00A1  0225  subwf  0x25,W          ; subwf   TIEMPO,W
+00A2  0008  return                 ; return
+00A3  0806  movf   PORTB,W         ; movf    PORTB,W
+00A4  39A0  andlw  0xA0            ; andlw   b'10100000'
+00A5  00A9  movwf  0x29            ; movwf   AUX
+00A6  0824  movf   0x24,W          ; movf    ESTADO,W
+00A7  2023  call   0x023           ; call    LUCES
+00A8  0429  iorwf  0x29,W          ; iorwf   AUX,W
+00A9  0086  movwf  PORTB           ; movwf   PORTB
+00AA  0008  return                 ; return
+00AB  3001  movlw  0x01            ; movlw   HIGH TXT_SEM
+00AC  00EC  movwf  0x6C            ; movwf   PTR_H
+00AD  300A  movlw  0x0A            ; movlw   LOW TXT_SEM
+00AE  00ED  movwf  0x6D            ; movwf   PTR_L
+00AF  217A  call   0x17A           ; call    TX_CADENA
+00B0  0824  movf   0x24,W          ; movf    ESTADO,W
+00B1  3A00  xorlw  0x00            ; xorlw   VERDE
+00B2  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00B3  28C0  goto   0x0C0           ; goto    AN_V
+00B4  0824  movf   0x24,W          ; movf    ESTADO,W
+00B5  3A01  xorlw  0x01            ; xorlw   AMARILLO
+00B6  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00B7  28C4  goto   0x0C4           ; goto    AN_A
+00B8  0824  movf   0x24,W          ; movf    ESTADO,W
+00B9  3A02  xorlw  0x02            ; xorlw   ROJO
+00BA  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00BB  28C8  goto   0x0C8           ; goto    AN_R
+00BC  3001  movlw  0x01            ; movlw   HIGH TXT_DESP
+00BD  00EC  movwf  0x6C            ; movwf   PTR_H
+00BE  303A  movlw  0x3A            ; movlw   LOW TXT_DESP
+00BF  28CB  goto   0x0CB           ; goto    AN_TX
+00C0  3001  movlw  0x01            ; movlw   HIGH TXT_VERDE
+00C1  00EC  movwf  0x6C            ; movwf   PTR_H
+00C2  3015  movlw  0x15            ; movlw   LOW TXT_VERDE
+00C3  28CB  goto   0x0CB           ; goto    AN_TX
+00C4  3001  movlw  0x01            ; movlw   HIGH TXT_AMAR
+00C5  00EC  movwf  0x6C            ; movwf   PTR_H
+00C6  301B  movlw  0x1B            ; movlw   LOW TXT_AMAR
+00C7  28CB  goto   0x0CB           ; goto    AN_TX
+00C8  3001  movlw  0x01            ; movlw   HIGH TXT_ROJO
+00C9  00EC  movwf  0x6C            ; movwf   PTR_H
+00CA  3024  movlw  0x24            ; movlw   LOW TXT_ROJO
+00CB  00ED  movwf  0x6D            ; movwf   PTR_L
+00CC  217A  call   0x17A           ; call    TX_CADENA
+00CD  2985  goto   0x185           ; goto    TX_CRLF
+00CE  3450  retlw  0x50            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00CF  3449  retlw  0x49            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D0  3443  retlw  0x43            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D1  3431  retlw  0x31            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D2  3436  retlw  0x36            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D3  3446  retlw  0x46            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D4  3438  retlw  0x38            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D5  3437  retlw  0x37            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D6  3437  retlw  0x37            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D7  3441  retlw  0x41            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D8  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00D9  346D  retlw  0x6D            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00DA  3475  retlw  0x75            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00DB  346C  retlw  0x6C            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00DC  3474  retlw  0x74            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00DD  3469  retlw  0x69            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00DE  3474  retlw  0x74            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00DF  3461  retlw  0x61            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E0  3472  retlw  0x72            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E1  3465  retlw  0x65            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E2  3461  retlw  0x61            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E3  343A  retlw  0x3A            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E4  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E5  3450  retlw  0x50            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E6  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E7  343D  retlw  0x3D            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E8  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00E9  3473  retlw  0x73            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00EA  346F  retlw  0x6F            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00EB  346C  retlw  0x6C            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00EC  3469  retlw  0x69            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00ED  3463  retlw  0x63            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00EE  3469  retlw  0x69            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00EF  3474  retlw  0x74            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F0  3475  retlw  0x75            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F1  3464  retlw  0x64            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F2  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F3  3470  retlw  0x70            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F4  3465  retlw  0x65            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F5  3461  retlw  0x61            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F6  3474  retlw  0x74            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F7  346F  retlw  0x6F            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F8  346E  retlw  0x6E            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00F9  3461  retlw  0x61            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00FA  346C  retlw  0x6C            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00FB  342C  retlw  0x2C            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00FC  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00FD  3453  retlw  0x53            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00FE  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+00FF  343D  retlw  0x3D            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0100  3420  retlw  0x20            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0101  3465  retlw  0x65            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0102  3473  retlw  0x73            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0103  3474  retlw  0x74            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0104  3461  retlw  0x61            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0105  3464  retlw  0x64            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0106  346F  retlw  0x6F            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0107  340D  retlw  0x0D            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0108  340A  retlw  0x0A            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+0109  3400  retlw  0x00            ; DT    "PIC16F877A multitarea: P = solicitud peatonal, S = estado",13,10,0
+010A  3453  retlw  0x53            ; DT    "Semaforo: ",0
+010B  3465  retlw  0x65            ; DT    "Semaforo: ",0
+010C  346D  retlw  0x6D            ; DT    "Semaforo: ",0
+010D  3461  retlw  0x61            ; DT    "Semaforo: ",0
+010E  3466  retlw  0x66            ; DT    "Semaforo: ",0
+010F  346F  retlw  0x6F            ; DT    "Semaforo: ",0
+0110  3472  retlw  0x72            ; DT    "Semaforo: ",0
+0111  346F  retlw  0x6F            ; DT    "Semaforo: ",0
+0112  343A  retlw  0x3A            ; DT    "Semaforo: ",0
+0113  3420  retlw  0x20            ; DT    "Semaforo: ",0
+0114  3400  retlw  0x00            ; DT    "Semaforo: ",0
+0115  3456  retlw  0x56            ; DT    "VERDE",0
+0116  3445  retlw  0x45            ; DT    "VERDE",0
+0117  3452  retlw  0x52            ; DT    "VERDE",0
+0118  3444  retlw  0x44            ; DT    "VERDE",0
+0119  3445  retlw  0x45            ; DT    "VERDE",0
+011A  3400  retlw  0x00            ; DT    "VERDE",0
+011B  3441  retlw  0x41            ; DT    "AMARILLO",0
+011C  344D  retlw  0x4D            ; DT    "AMARILLO",0
+011D  3441  retlw  0x41            ; DT    "AMARILLO",0
+011E  3452  retlw  0x52            ; DT    "AMARILLO",0
+011F  3449  retlw  0x49            ; DT    "AMARILLO",0
+0120  344C  retlw  0x4C            ; DT    "AMARILLO",0
+0121  344C  retlw  0x4C            ; DT    "AMARILLO",0
+0122  344F  retlw  0x4F            ; DT    "AMARILLO",0
+0123  3400  retlw  0x00            ; DT    "AMARILLO",0
+0124  3452  retlw  0x52            ; DT    "ROJO (pasa el peaton)",0
+0125  344F  retlw  0x4F            ; DT    "ROJO (pasa el peaton)",0
+0126  344A  retlw  0x4A            ; DT    "ROJO (pasa el peaton)",0
+0127  344F  retlw  0x4F            ; DT    "ROJO (pasa el peaton)",0
+0128  3420  retlw  0x20            ; DT    "ROJO (pasa el peaton)",0
+0129  3428  retlw  0x28            ; DT    "ROJO (pasa el peaton)",0
+012A  3470  retlw  0x70            ; DT    "ROJO (pasa el peaton)",0
+012B  3461  retlw  0x61            ; DT    "ROJO (pasa el peaton)",0
+012C  3473  retlw  0x73            ; DT    "ROJO (pasa el peaton)",0
+012D  3461  retlw  0x61            ; DT    "ROJO (pasa el peaton)",0
+012E  3420  retlw  0x20            ; DT    "ROJO (pasa el peaton)",0
+012F  3465  retlw  0x65            ; DT    "ROJO (pasa el peaton)",0
+0130  346C  retlw  0x6C            ; DT    "ROJO (pasa el peaton)",0
+0131  3420  retlw  0x20            ; DT    "ROJO (pasa el peaton)",0
+0132  3470  retlw  0x70            ; DT    "ROJO (pasa el peaton)",0
+0133  3465  retlw  0x65            ; DT    "ROJO (pasa el peaton)",0
+0134  3461  retlw  0x61            ; DT    "ROJO (pasa el peaton)",0
+0135  3474  retlw  0x74            ; DT    "ROJO (pasa el peaton)",0
+0136  346F  retlw  0x6F            ; DT    "ROJO (pasa el peaton)",0
+0137  346E  retlw  0x6E            ; DT    "ROJO (pasa el peaton)",0
+0138  3429  retlw  0x29            ; DT    "ROJO (pasa el peaton)",0
+0139  3400  retlw  0x00            ; DT    "ROJO (pasa el peaton)",0
+013A  3454  retlw  0x54            ; DT    "TODO EN ROJO",0
+013B  344F  retlw  0x4F            ; DT    "TODO EN ROJO",0
+013C  3444  retlw  0x44            ; DT    "TODO EN ROJO",0
+013D  344F  retlw  0x4F            ; DT    "TODO EN ROJO",0
+013E  3420  retlw  0x20            ; DT    "TODO EN ROJO",0
+013F  3445  retlw  0x45            ; DT    "TODO EN ROJO",0
+0140  344E  retlw  0x4E            ; DT    "TODO EN ROJO",0
+0141  3420  retlw  0x20            ; DT    "TODO EN ROJO",0
+0142  3452  retlw  0x52            ; DT    "TODO EN ROJO",0
+0143  344F  retlw  0x4F            ; DT    "TODO EN ROJO",0
+0144  344A  retlw  0x4A            ; DT    "TODO EN ROJO",0
+0145  344F  retlw  0x4F            ; DT    "TODO EN ROJO",0
+0146  3400  retlw  0x00            ; DT    "TODO EN ROJO",0
+0147  3453  retlw  0x53            ; DT    "Solicitud peatonal registrada",13,10,0
+0148  346F  retlw  0x6F            ; DT    "Solicitud peatonal registrada",13,10,0
+0149  346C  retlw  0x6C            ; DT    "Solicitud peatonal registrada",13,10,0
+014A  3469  retlw  0x69            ; DT    "Solicitud peatonal registrada",13,10,0
+014B  3463  retlw  0x63            ; DT    "Solicitud peatonal registrada",13,10,0
+014C  3469  retlw  0x69            ; DT    "Solicitud peatonal registrada",13,10,0
+014D  3474  retlw  0x74            ; DT    "Solicitud peatonal registrada",13,10,0
+014E  3475  retlw  0x75            ; DT    "Solicitud peatonal registrada",13,10,0
+014F  3464  retlw  0x64            ; DT    "Solicitud peatonal registrada",13,10,0
+0150  3420  retlw  0x20            ; DT    "Solicitud peatonal registrada",13,10,0
+0151  3470  retlw  0x70            ; DT    "Solicitud peatonal registrada",13,10,0
+0152  3465  retlw  0x65            ; DT    "Solicitud peatonal registrada",13,10,0
+0153  3461  retlw  0x61            ; DT    "Solicitud peatonal registrada",13,10,0
+0154  3474  retlw  0x74            ; DT    "Solicitud peatonal registrada",13,10,0
+0155  346F  retlw  0x6F            ; DT    "Solicitud peatonal registrada",13,10,0
+0156  346E  retlw  0x6E            ; DT    "Solicitud peatonal registrada",13,10,0
+0157  3461  retlw  0x61            ; DT    "Solicitud peatonal registrada",13,10,0
+0158  346C  retlw  0x6C            ; DT    "Solicitud peatonal registrada",13,10,0
+0159  3420  retlw  0x20            ; DT    "Solicitud peatonal registrada",13,10,0
+015A  3472  retlw  0x72            ; DT    "Solicitud peatonal registrada",13,10,0
+015B  3465  retlw  0x65            ; DT    "Solicitud peatonal registrada",13,10,0
+015C  3467  retlw  0x67            ; DT    "Solicitud peatonal registrada",13,10,0
+015D  3469  retlw  0x69            ; DT    "Solicitud peatonal registrada",13,10,0
+015E  3473  retlw  0x73            ; DT    "Solicitud peatonal registrada",13,10,0
+015F  3474  retlw  0x74            ; DT    "Solicitud peatonal registrada",13,10,0
+0160  3472  retlw  0x72            ; DT    "Solicitud peatonal registrada",13,10,0
+0161  3461  retlw  0x61            ; DT    "Solicitud peatonal registrada",13,10,0
+0162  3464  retlw  0x64            ; DT    "Solicitud peatonal registrada",13,10,0
+0163  3461  retlw  0x61            ; DT    "Solicitud peatonal registrada",13,10,0
+0164  340D  retlw  0x0D            ; DT    "Solicitud peatonal registrada",13,10,0
+0165  340A  retlw  0x0A            ; DT    "Solicitud peatonal registrada",13,10,0
+0166  3400  retlw  0x00            ; DT    "Solicitud peatonal registrada",13,10,0
+0167  086C  movf   0x6C,W          ; movf    PTR_H,W
+0168  008A  movwf  PCLATH          ; movwf   PCLATH
+0169  086D  movf   0x6D,W          ; movf    PTR_L,W
+016A  0082  movwf  PCL             ; movwf   PCL
+016B  1683  bsf    STATUS,5        ; BANKSEL SPBRG
+016C  1303  bcf    STATUS,6        ; BANKSEL SPBRG
+016D  3019  movlw  0x19            ; movlw   25
+016E  0099  movwf  TXREG           ; movwf   SPBRG
+016F  3024  movlw  0x24            ; movlw   b'00100100'
+0170  0098  movwf  RCSTA           ; movwf   TXSTA
+0171  1283  bcf    STATUS,5        ; BANKSEL RCSTA
+0172  1303  bcf    STATUS,6        ; BANKSEL RCSTA
+0173  3090  movlw  0x90            ; movlw   b'10010000'
+0174  0098  movwf  RCSTA           ; movwf   RCSTA
+0175  0008  return                 ; return
+0176  1E0C  btfss  PIR1,4          ; btfss   PIR1,TXIF
+0177  2976  goto   0x176           ; goto    TX_BYTE
+0178  0099  movwf  TXREG           ; movwf   TXREG
+0179  0008  return                 ; return
+017A  2167  call   0x167           ; call    LEER_TABLA
+017B  3800  iorlw  0x00            ; iorlw   0
+017C  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+017D  0008  return                 ; return
+017E  2176  call   0x176           ; call    TX_BYTE
+017F  0AED  incf   0x6D,F          ; incf    PTR_L,F
+0180  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0181  0AEC  incf   0x6C,F          ; incf    PTR_H,F
+0182  297A  goto   0x17A           ; goto    TX_CADENA
+0183  3E30  addlw  0x30            ; addlw   '0'
+0184  2976  goto   0x176           ; goto    TX_BYTE
+0185  300D  movlw  0x0D            ; movlw   13
+0186  2176  call   0x176           ; call    TX_BYTE
+0187  300A  movlw  0x0A            ; movlw   10
+0188  2976  goto   0x176           ; goto    TX_BYTE

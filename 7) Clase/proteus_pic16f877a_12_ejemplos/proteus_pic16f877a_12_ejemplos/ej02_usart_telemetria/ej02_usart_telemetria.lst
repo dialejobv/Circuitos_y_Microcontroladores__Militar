@@ -1,0 +1,290 @@
+0000  2805  goto   0x005           ; goto    INICIO
+0005  1683  bsf    STATUS,5        ; BANKSEL TRISB
+0006  1303  bcf    STATUS,6        ; BANKSEL TRISB
+0007  0186  clrf   PORTB           ; clrf    TRISB
+0008  3084  movlw  0x84            ; movlw   0x84
+0009  009F  movwf  ADCON0          ; movwf   ADCON1
+000A  1283  bcf    STATUS,5        ; BANKSEL PORTB
+000B  1303  bcf    STATUS,6        ; BANKSEL PORTB
+000C  0186  clrf   PORTB           ; clrf    PORTB
+000D  20B1  call   0x0B1           ; call    UART_INIT
+000E  3000  movlw  0x00            ; movlw   HIGH TXT_HOLA
+000F  00EC  movwf  0x6C            ; movwf   PTR_H
+0010  3070  movlw  0x70            ; movlw   LOW TXT_HOLA
+0011  00ED  movwf  0x6D            ; movwf   PTR_L
+0012  20C0  call   0x0C0           ; call    TX_CADENA
+0013  3041  movlw  0x41            ; movlw   0x41
+0014  2051  call   0x051           ; call    LEER_ADC
+0015  3000  movlw  0x00            ; movlw   HIGH TXT_AN0
+0016  00EC  movwf  0x6C            ; movwf   PTR_H
+0017  30A0  movlw  0xA0            ; movlw   LOW TXT_AN0
+0018  00ED  movwf  0x6D            ; movwf   PTR_L
+0019  20C0  call   0x0C0           ; call    TX_CADENA
+001A  0820  movf   0x20,W          ; movf    ADC_H,W
+001B  00D0  movwf  0x50            ; movwf   NUM_H
+001C  0821  movf   0x21,W          ; movf    ADC_L,W
+001D  00D1  movwf  0x51            ; movwf   NUM_L
+001E  20DD  call   0x0DD           ; call    BCD16
+001F  0857  movf   0x57,W          ; movf    DIG3,W
+0020  20C9  call   0x0C9           ; call    TX_NUM
+0021  0858  movf   0x58,W          ; movf    DIG2,W
+0022  20C9  call   0x0C9           ; call    TX_NUM
+0023  0859  movf   0x59,W          ; movf    DIG1,W
+0024  20C9  call   0x0C9           ; call    TX_NUM
+0025  085A  movf   0x5A,W          ; movf    DIG0,W
+0026  20C9  call   0x0C9           ; call    TX_NUM
+0027  205F  call   0x05F           ; call    A_MILIVOLTIOS
+0028  20DD  call   0x0DD           ; call    BCD16
+0029  3000  movlw  0x00            ; movlw   HIGH TXT_V
+002A  00EC  movwf  0x6C            ; movwf   PTR_H
+002B  30A5  movlw  0xA5            ; movlw   LOW TXT_V
+002C  00ED  movwf  0x6D            ; movwf   PTR_L
+002D  20C0  call   0x0C0           ; call    TX_CADENA
+002E  0857  movf   0x57,W          ; movf    DIG3,W
+002F  20C9  call   0x0C9           ; call    TX_NUM
+0030  302E  movlw  0x2E            ; movlw   '.'
+0031  20BC  call   0x0BC           ; call    TX_BYTE
+0032  0858  movf   0x58,W          ; movf    DIG2,W
+0033  20C9  call   0x0C9           ; call    TX_NUM
+0034  0859  movf   0x59,W          ; movf    DIG1,W
+0035  20C9  call   0x0C9           ; call    TX_NUM
+0036  3049  movlw  0x49            ; movlw   0x49
+0037  2051  call   0x051           ; call    LEER_ADC
+0038  205F  call   0x05F           ; call    A_MILIVOLTIOS
+0039  20DD  call   0x0DD           ; call    BCD16
+003A  3000  movlw  0x00            ; movlw   HIGH TXT_T
+003B  00EC  movwf  0x6C            ; movwf   PTR_H
+003C  30A9  movlw  0xA9            ; movlw   LOW TXT_T
+003D  00ED  movwf  0x6D            ; movwf   PTR_L
+003E  20C0  call   0x0C0           ; call    TX_CADENA
+003F  0857  movf   0x57,W          ; movf    DIG3,W
+0040  20C9  call   0x0C9           ; call    TX_NUM
+0041  0858  movf   0x58,W          ; movf    DIG2,W
+0042  20C9  call   0x0C9           ; call    TX_NUM
+0043  0859  movf   0x59,W          ; movf    DIG1,W
+0044  20C9  call   0x0C9           ; call    TX_NUM
+0045  302E  movlw  0x2E            ; movlw   '.'
+0046  20BC  call   0x0BC           ; call    TX_BYTE
+0047  085A  movf   0x5A,W          ; movf    DIG0,W
+0048  20C9  call   0x0C9           ; call    TX_NUM
+0049  3043  movlw  0x43            ; movlw   'C'
+004A  20BC  call   0x0BC           ; call    TX_BYTE
+004B  20CB  call   0x0CB           ; call    TX_CRLF
+004C  3001  movlw  0x01            ; movlw   1
+004D  0686  xorwf  PORTB,F         ; xorwf   PORTB,F
+004E  30C8  movlw  0xC8            ; movlw   200
+004F  20CF  call   0x0CF           ; call    RETARDO_MS
+0050  2813  goto   0x013           ; goto    LAZO
+0051  009F  movwf  ADCON0          ; movwf   ADCON0
+0052  20D8  call   0x0D8           ; call    RETARDO_50US
+0053  151F  bsf    ADCON0,2        ; bsf     ADCON0,GO
+0054  191F  btfsc  ADCON0,2        ; btfsc   ADCON0,GO
+0055  2854  goto   0x054           ; goto    ESPERA
+0056  081E  movf   ADRESH,W        ; movf    ADRESH,W
+0057  00A0  movwf  0x20            ; movwf   ADC_H
+0058  1683  bsf    STATUS,5        ; BANKSEL ADRESL
+0059  1303  bcf    STATUS,6        ; BANKSEL ADRESL
+005A  081E  movf   ADRESH,W        ; movf    ADRESL,W
+005B  1283  bcf    STATUS,5        ; BANKSEL PORTB
+005C  1303  bcf    STATUS,6        ; BANKSEL PORTB
+005D  00A1  movwf  0x21            ; movwf   ADC_L
+005E  0008  return                 ; return
+005F  0820  movf   0x20,W          ; movf    ADC_H,W
+0060  00D0  movwf  0x50            ; movwf   NUM_H
+0061  0821  movf   0x21,W          ; movf    ADC_L,W
+0062  00D1  movwf  0x51            ; movwf   NUM_L
+0063  3002  movlw  0x02            ; movlw   HIGH 625
+0064  00D2  movwf  0x52            ; movwf   K_H
+0065  3071  movlw  0x71            ; movlw   LOW 625
+0066  00D3  movwf  0x53            ; movwf   K_L
+0067  2106  call   0x106           ; call    MUL16
+0068  0DDD  rlf    0x5D,F          ; rlf     P0,F
+0069  0DDC  rlf    0x5C,F          ; rlf     P1,F
+006A  0DDB  rlf    0x5B,F          ; rlf     P2,F
+006B  085B  movf   0x5B,W          ; movf    P2,W
+006C  00D0  movwf  0x50            ; movwf   NUM_H
+006D  085C  movf   0x5C,W          ; movf    P1,W
+006E  00D1  movwf  0x51            ; movwf   NUM_L
+006F  0008  return                 ; return
+0070  3450  retlw  0x50            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0071  3449  retlw  0x49            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0072  3443  retlw  0x43            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0073  3431  retlw  0x31            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0074  3436  retlw  0x36            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0075  3446  retlw  0x46            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0076  3438  retlw  0x38            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0077  3437  retlw  0x37            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0078  3437  retlw  0x37            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0079  3441  retlw  0x41            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+007A  3420  retlw  0x20            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+007B  3474  retlw  0x74            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+007C  3465  retlw  0x65            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+007D  346C  retlw  0x6C            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+007E  3465  retlw  0x65            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+007F  346D  retlw  0x6D            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0080  3465  retlw  0x65            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0081  3474  retlw  0x74            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0082  3472  retlw  0x72            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0083  3469  retlw  0x69            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0084  3461  retlw  0x61            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0085  343A  retlw  0x3A            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0086  3420  retlw  0x20            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0087  3441  retlw  0x41            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0088  344E  retlw  0x4E            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0089  3430  retlw  0x30            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+008A  3420  retlw  0x20            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+008B  3428  retlw  0x28            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+008C  3470  retlw  0x70            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+008D  346F  retlw  0x6F            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+008E  3474  retlw  0x74            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+008F  3429  retlw  0x29            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0090  3420  retlw  0x20            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0091  3479  retlw  0x79            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0092  3420  retlw  0x20            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0093  3441  retlw  0x41            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0094  344E  retlw  0x4E            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0095  3431  retlw  0x31            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0096  3420  retlw  0x20            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0097  3428  retlw  0x28            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0098  344C  retlw  0x4C            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+0099  344D  retlw  0x4D            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+009A  3433  retlw  0x33            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+009B  3435  retlw  0x35            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+009C  3429  retlw  0x29            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+009D  340D  retlw  0x0D            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+009E  340A  retlw  0x0A            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+009F  3400  retlw  0x00            ; DT     "PIC16F877A telemetria: AN0 (pot) y AN1 (LM35)",13,10,0
+00A0  3441  retlw  0x41            ; DT     "AN0=",0
+00A1  344E  retlw  0x4E            ; DT     "AN0=",0
+00A2  3430  retlw  0x30            ; DT     "AN0=",0
+00A3  343D  retlw  0x3D            ; DT     "AN0=",0
+00A4  3400  retlw  0x00            ; DT     "AN0=",0
+00A5  3420  retlw  0x20            ; DT     " V=",0
+00A6  3456  retlw  0x56            ; DT     " V=",0
+00A7  343D  retlw  0x3D            ; DT     " V=",0
+00A8  3400  retlw  0x00            ; DT     " V=",0
+00A9  3420  retlw  0x20            ; DT     " T=",0
+00AA  3454  retlw  0x54            ; DT     " T=",0
+00AB  343D  retlw  0x3D            ; DT     " T=",0
+00AC  3400  retlw  0x00            ; DT     " T=",0
+00AD  086C  movf   0x6C,W          ; movf    PTR_H,W
+00AE  008A  movwf  PCLATH          ; movwf   PCLATH
+00AF  086D  movf   0x6D,W          ; movf    PTR_L,W
+00B0  0082  movwf  PCL             ; movwf   PCL
+00B1  1683  bsf    STATUS,5        ; BANKSEL SPBRG
+00B2  1303  bcf    STATUS,6        ; BANKSEL SPBRG
+00B3  3019  movlw  0x19            ; movlw   25
+00B4  0099  movwf  TXREG           ; movwf   SPBRG
+00B5  3024  movlw  0x24            ; movlw   b'00100100'
+00B6  0098  movwf  RCSTA           ; movwf   TXSTA
+00B7  1283  bcf    STATUS,5        ; BANKSEL RCSTA
+00B8  1303  bcf    STATUS,6        ; BANKSEL RCSTA
+00B9  3090  movlw  0x90            ; movlw   b'10010000'
+00BA  0098  movwf  RCSTA           ; movwf   RCSTA
+00BB  0008  return                 ; return
+00BC  1E0C  btfss  PIR1,4          ; btfss   PIR1,TXIF
+00BD  28BC  goto   0x0BC           ; goto    TX_BYTE
+00BE  0099  movwf  TXREG           ; movwf   TXREG
+00BF  0008  return                 ; return
+00C0  20AD  call   0x0AD           ; call    LEER_TABLA
+00C1  3800  iorlw  0x00            ; iorlw   0
+00C2  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00C3  0008  return                 ; return
+00C4  20BC  call   0x0BC           ; call    TX_BYTE
+00C5  0AED  incf   0x6D,F          ; incf    PTR_L,F
+00C6  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00C7  0AEC  incf   0x6C,F          ; incf    PTR_H,F
+00C8  28C0  goto   0x0C0           ; goto    TX_CADENA
+00C9  3E30  addlw  0x30            ; addlw   '0'
+00CA  28BC  goto   0x0BC           ; goto    TX_BYTE
+00CB  300D  movlw  0x0D            ; movlw   13
+00CC  20BC  call   0x0BC           ; call    TX_BYTE
+00CD  300A  movlw  0x0A            ; movlw   10
+00CE  28BC  goto   0x0BC           ; goto    TX_BYTE
+00CF  00E8  movwf  0x68            ; movwf   R_MS
+00D0  30F9  movlw  0xF9            ; movlw   249
+00D1  00E9  movwf  0x69            ; movwf   R_US
+00D2  0000  nop                    ; nop
+00D3  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+00D4  28D2  goto   0x0D2           ; goto    RMS2
+00D5  0BE8  decfsz 0x68,F          ; decfsz  R_MS,F
+00D6  28D0  goto   0x0D0           ; goto    RMS1
+00D7  0008  return                 ; return
+00D8  300F  movlw  0x0F            ; movlw   15
+00D9  00E9  movwf  0x69            ; movwf   R_US
+00DA  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+00DB  28DA  goto   0x0DA           ; goto    R50
+00DC  0008  return                 ; return
+00DD  3027  movlw  0x27            ; movlw   HIGH 10000
+00DE  00D2  movwf  0x52            ; movwf   K_H
+00DF  3010  movlw  0x10            ; movlw   LOW 10000
+00E0  00D3  movwf  0x53            ; movwf   K_L
+00E1  20F5  call   0x0F5           ; call    CONTAR
+00E2  00D6  movwf  0x56            ; movwf   DIG4
+00E3  3003  movlw  0x03            ; movlw   HIGH 1000
+00E4  00D2  movwf  0x52            ; movwf   K_H
+00E5  30E8  movlw  0xE8            ; movlw   LOW 1000
+00E6  00D3  movwf  0x53            ; movwf   K_L
+00E7  20F5  call   0x0F5           ; call    CONTAR
+00E8  00D7  movwf  0x57            ; movwf   DIG3
+00E9  01D2  clrf   0x52            ; clrf    K_H
+00EA  3064  movlw  0x64            ; movlw   100
+00EB  00D3  movwf  0x53            ; movwf   K_L
+00EC  20F5  call   0x0F5           ; call    CONTAR
+00ED  00D8  movwf  0x58            ; movwf   DIG2
+00EE  300A  movlw  0x0A            ; movlw   10
+00EF  00D3  movwf  0x53            ; movwf   K_L
+00F0  20F5  call   0x0F5           ; call    CONTAR
+00F1  00D9  movwf  0x59            ; movwf   DIG1
+00F2  0851  movf   0x51,W          ; movf    NUM_L,W
+00F3  00DA  movwf  0x5A            ; movwf   DIG0
+00F4  0008  return                 ; return
+00F5  01D5  clrf   0x55            ; clrf    CNT
+00F6  0853  movf   0x53,W          ; movf    K_L,W
+00F7  0251  subwf  0x51,W          ; subwf   NUM_L,W
+00F8  00D4  movwf  0x54            ; movwf   TMP_L
+00F9  0852  movf   0x52,W          ; movf    K_H,W
+00FA  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+00FB  3E01  addlw  0x01            ; addlw   1
+00FC  0250  subwf  0x50,W          ; subwf   NUM_H,W
+00FD  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+00FE  2904  goto   0x104           ; goto    CT2
+00FF  00D0  movwf  0x50            ; movwf   NUM_H
+0100  0854  movf   0x54,W          ; movf    TMP_L,W
+0101  00D1  movwf  0x51            ; movwf   NUM_L
+0102  0AD5  incf   0x55,F          ; incf    CNT,F
+0103  28F6  goto   0x0F6           ; goto    CT1
+0104  0855  movf   0x55,W          ; movf    CNT,W
+0105  0008  return                 ; return
+0106  01DD  clrf   0x5D            ; clrf    P0
+0107  01DC  clrf   0x5C            ; clrf    P1
+0108  01DB  clrf   0x5B            ; clrf    P2
+0109  01DE  clrf   0x5E            ; clrf    X2
+010A  0850  movf   0x50,W          ; movf    NUM_H,W
+010B  00DF  movwf  0x5F            ; movwf   X1
+010C  0851  movf   0x51,W          ; movf    NUM_L,W
+010D  00E0  movwf  0x60            ; movwf   X0
+010E  3010  movlw  0x10            ; movlw   16
+010F  00D5  movwf  0x55            ; movwf   CNT
+0110  1003  bcf    STATUS,0        ; bcf     STATUS,C
+0111  0CD2  rrf    0x52,F          ; rrf     K_H,F
+0112  0CD3  rrf    0x53,F          ; rrf     K_L,F
+0113  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+0114  291F  goto   0x11F           ; goto    ML2
+0115  0860  movf   0x60,W          ; movf    X0,W
+0116  07DD  addwf  0x5D,F          ; addwf   P0,F
+0117  085F  movf   0x5F,W          ; movf    X1,W
+0118  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0119  0F5F  incfsz 0x5F,W          ; incfsz  X1,W
+011A  07DC  addwf  0x5C,F          ; addwf   P1,F
+011B  085E  movf   0x5E,W          ; movf    X2,W
+011C  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+011D  0F5E  incfsz 0x5E,W          ; incfsz  X2,W
+011E  07DB  addwf  0x5B,F          ; addwf   P2,F
+011F  1003  bcf    STATUS,0        ; bcf     STATUS,C
+0120  0DE0  rlf    0x60,F          ; rlf     X0,F
+0121  0DDF  rlf    0x5F,F          ; rlf     X1,F
+0122  0DDE  rlf    0x5E,F          ; rlf     X2,F
+0123  0BD5  decfsz 0x55,F          ; decfsz  CNT,F
+0124  2910  goto   0x110           ; goto    ML1
+0125  0008  return                 ; return

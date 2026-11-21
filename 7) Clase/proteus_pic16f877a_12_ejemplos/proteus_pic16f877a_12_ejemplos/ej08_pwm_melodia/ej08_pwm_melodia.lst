@@ -1,0 +1,163 @@
+0000  2864  goto   0x064           ; goto    INICIO
+0005  0782  addwf  PCL,F           ; addwf   PCL,F
+0006  34ED  retlw  0xED            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+0007  34D4  retlw  0xD4            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+0008  34BC  retlw  0xBC            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+0009  34B2  retlw  0xB2            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+000A  349E  retlw  0x9E            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+000B  348D  retlw  0x8D            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+000C  347D  retlw  0x7D            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+000D  3476  retlw  0x76            ; DT      237, 212, 188, 178, 158, 141, 125, 118
+000E  0782  addwf  PCL,F           ; addwf   PCL,F
+000F  3400  retlw  0x00            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0010  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0011  3400  retlw  0x00            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0012  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0013  3404  retlw  0x04            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0014  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0015  3404  retlw  0x04            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0016  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0017  3405  retlw  0x05            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0018  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0019  3405  retlw  0x05            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+001A  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+001B  3404  retlw  0x04            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+001C  3402  retlw  0x02            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+001D  3403  retlw  0x03            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+001E  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+001F  3403  retlw  0x03            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0020  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0021  3402  retlw  0x02            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0022  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0023  3402  retlw  0x02            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0024  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0025  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0026  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0027  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0028  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0029  3400  retlw  0x00            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+002A  3402  retlw  0x02            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+002B  3404  retlw  0x04            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+002C  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+002D  3404  retlw  0x04            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+002E  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+002F  3403  retlw  0x03            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0030  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0031  3403  retlw  0x03            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0032  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0033  3402  retlw  0x02            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0034  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0035  3402  retlw  0x02            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0036  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0037  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0038  3402  retlw  0x02            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0039  3404  retlw  0x04            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+003A  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+003B  3404  retlw  0x04            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+003C  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+003D  3403  retlw  0x03            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+003E  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+003F  3403  retlw  0x03            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0040  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0041  3402  retlw  0x02            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0042  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0043  3402  retlw  0x02            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0044  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0045  3401  retlw  0x01            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0046  3402  retlw  0x02            ; DT      4,1, 4,1, 3,1, 3,1, 2,1, 2,1, 1,2
+0047  3400  retlw  0x00            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0048  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0049  3400  retlw  0x00            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+004A  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+004B  3404  retlw  0x04            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+004C  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+004D  3404  retlw  0x04            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+004E  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+004F  3405  retlw  0x05            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0050  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0051  3405  retlw  0x05            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0052  3401  retlw  0x01            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0053  3404  retlw  0x04            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0054  3402  retlw  0x02            ; DT      0,1, 0,1, 4,1, 4,1, 5,1, 5,1, 4,2
+0055  3403  retlw  0x03            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0056  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0057  3403  retlw  0x03            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0058  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0059  3402  retlw  0x02            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+005A  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+005B  3402  retlw  0x02            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+005C  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+005D  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+005E  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+005F  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0060  3401  retlw  0x01            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0061  3400  retlw  0x00            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0062  3402  retlw  0x02            ; DT      3,1, 3,1, 2,1, 2,1, 1,1, 1,1, 0,2
+0063  34FF  retlw  0xFF            ; DT      0xFF
+0064  1683  bsf    STATUS,5        ; BANKSEL OPTION_REG
+0065  1303  bcf    STATUS,6        ; BANKSEL OPTION_REG
+0066  1381  bcf    TMR0,7          ; bcf     OPTION_REG,NOT_RBPU
+0067  1107  bcf    PORTC,2         ; bcf     TRISC,2
+0068  1007  bcf    PORTC,0         ; bcf     TRISC,0
+0069  1283  bcf    STATUS,5        ; BANKSEL PORTC
+006A  1303  bcf    STATUS,6        ; BANKSEL PORTC
+006B  0187  clrf   PORTC           ; clrf    PORTC
+006C  0195  clrf   CCPR1L          ; clrf    CCPR1L
+006D  300C  movlw  0x0C            ; movlw   0x0C
+006E  0097  movwf  CCP1CON         ; movwf   CCP1CON
+006F  3006  movlw  0x06            ; movlw   b'00000110'
+0070  0092  movwf  T2CON           ; movwf   T2CON
+0071  1806  btfsc  PORTB,0         ; btfsc   PORTB,0
+0072  2871  goto   0x071           ; goto    ESPERAR
+0073  1407  bsf    PORTC,0         ; bsf     PORTC,0
+0074  01A0  clrf   0x20            ; clrf    IDX
+0075  0820  movf   0x20,W          ; movf    IDX,W
+0076  200E  call   0x00E           ; call    MELODIA
+0077  00A1  movwf  0x21            ; movwf   NOTA
+0078  3AFF  xorlw  0xFF            ; xorlw   0xFF
+0079  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+007A  2896  goto   0x096           ; goto    FIN
+007B  0AA0  incf   0x20,F          ; incf    IDX,F
+007C  0820  movf   0x20,W          ; movf    IDX,W
+007D  200E  call   0x00E           ; call    MELODIA
+007E  00A2  movwf  0x22            ; movwf   DUR
+007F  0AA0  incf   0x20,F          ; incf    IDX,F
+0080  0821  movf   0x21,W          ; movf    NOTA,W
+0081  2005  call   0x005           ; call    PR2_NOTA
+0082  1683  bsf    STATUS,5        ; BANKSEL PR2
+0083  1303  bcf    STATUS,6        ; BANKSEL PR2
+0084  0092  movwf  T2CON           ; movwf   PR2
+0085  1283  bcf    STATUS,5        ; BANKSEL CCPR1L
+0086  1303  bcf    STATUS,6        ; BANKSEL CCPR1L
+0087  0095  movwf  CCPR1L          ; movwf   CCPR1L
+0088  0A95  incf   CCPR1L,F        ; incf    CCPR1L,F
+0089  1003  bcf    STATUS,0        ; bcf     STATUS,C
+008A  0C95  rrf    CCPR1L,F        ; rrf     CCPR1L,F
+008B  30E6  movlw  0xE6            ; movlw   230
+008C  2099  call   0x099           ; call    RETARDO_MS
+008D  0BA2  decfsz 0x22,F          ; decfsz  DUR,F
+008E  2893  goto   0x093           ; goto    SONAR_MAS
+008F  0195  clrf   CCPR1L          ; clrf    CCPR1L
+0090  3014  movlw  0x14            ; movlw   20
+0091  2099  call   0x099           ; call    RETARDO_MS
+0092  2875  goto   0x075           ; goto    TOCAR
+0093  3014  movlw  0x14            ; movlw   20
+0094  2099  call   0x099           ; call    RETARDO_MS
+0095  288B  goto   0x08B           ; goto    SONAR
+0096  0195  clrf   CCPR1L          ; clrf    CCPR1L
+0097  1007  bcf    PORTC,0         ; bcf     PORTC,0
+0098  2871  goto   0x071           ; goto    ESPERAR
+0099  00E8  movwf  0x68            ; movwf   R_MS
+009A  30F9  movlw  0xF9            ; movlw   249
+009B  00E9  movwf  0x69            ; movwf   R_US
+009C  0000  nop                    ; nop
+009D  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+009E  289C  goto   0x09C           ; goto    RMS2
+009F  0BE8  decfsz 0x68,F          ; decfsz  R_MS,F
+00A0  289A  goto   0x09A           ; goto    RMS1
+00A1  0008  return                 ; return
+00A2  300F  movlw  0x0F            ; movlw   15
+00A3  00E9  movwf  0x69            ; movwf   R_US
+00A4  0BE9  decfsz 0x69,F          ; decfsz  R_US,F
+00A5  28A4  goto   0x0A4           ; goto    R50
+00A6  0008  return                 ; return

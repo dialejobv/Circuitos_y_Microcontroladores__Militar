@@ -1,0 +1,231 @@
+0000  2817  goto   0x017           ; goto    INICIO
+0004  00F0  movwf  0x70            ; movwf   W_TEMP
+0005  0E03  swapf  STATUS,W        ; swapf   STATUS,W
+0006  0183  clrf   STATUS          ; clrf    STATUS
+0007  00F1  movwf  0x71            ; movwf   S_TEMP
+0008  080A  movf   PCLATH,W        ; movf    PCLATH,W
+0009  00F2  movwf  0x72            ; movwf   P_TEMP
+000A  018A  clrf   PCLATH          ; clrf    PCLATH
+000B  1E8C  btfss  PIR1,5          ; btfss   PIR1,RCIF
+000C  2810  goto   0x010           ; goto    FIN_ISR
+000D  081A  movf   RCREG,W         ; movf    RCREG,W
+000E  00A0  movwf  0x20            ; movwf   DATO
+000F  1421  bsf    0x21,0          ; bsf     LLEGO,0
+0010  0872  movf   0x72,W          ; movf    P_TEMP,W
+0011  008A  movwf  PCLATH          ; movwf   PCLATH
+0012  0E71  swapf  0x71,W          ; swapf   S_TEMP,W
+0013  0083  movwf  STATUS          ; movwf   STATUS
+0014  0EF0  swapf  0x70,F          ; swapf   W_TEMP,F
+0015  0E70  swapf  0x70,W          ; swapf   W_TEMP,W
+0016  0009  retfie                 ; retfie
+0017  1683  bsf    STATUS,5        ; BANKSEL TRISB
+0018  1303  bcf    STATUS,6        ; BANKSEL TRISB
+0019  0186  clrf   PORTB           ; clrf    TRISB
+001A  1283  bcf    STATUS,5        ; BANKSEL PORTB
+001B  1303  bcf    STATUS,6        ; BANKSEL PORTB
+001C  0186  clrf   PORTB           ; clrf    PORTB
+001D  01A1  clrf   0x21            ; clrf    LLEGO
+001E  20CC  call   0x0CC           ; call    UART_INIT
+001F  1683  bsf    STATUS,5        ; BANKSEL PIE1
+0020  1303  bcf    STATUS,6        ; BANKSEL PIE1
+0021  168C  bsf    PIR1,5          ; bsf     PIE1,RCIE
+0022  1283  bcf    STATUS,5        ; BANKSEL PORTB
+0023  1303  bcf    STATUS,6        ; BANKSEL PORTB
+0024  30C0  movlw  0xC0            ; movlw   b'11000000'
+0025  008B  movwf  INTCON          ; movwf   INTCON
+0026  3000  movlw  0x00            ; movlw   HIGH TXT_MENU
+0027  00EC  movwf  0x6C            ; movwf   PTR_H
+0028  306B  movlw  0x6B            ; movlw   LOW TXT_MENU
+0029  00ED  movwf  0x6D            ; movwf   PTR_L
+002A  20DB  call   0x0DB           ; call    TX_CADENA
+002B  1C98  btfss  RCSTA,1         ; btfss   RCSTA,OERR
+002C  282F  goto   0x02F           ; goto    LAZO1
+002D  1218  bcf    RCSTA,4         ; bcf     RCSTA,CREN
+002E  1618  bsf    RCSTA,4         ; bsf     RCSTA,CREN
+002F  1C21  btfss  0x21,0          ; btfss   LLEGO,0
+0030  282B  goto   0x02B           ; goto    LAZO
+0031  1021  bcf    0x21,0          ; bcf     LLEGO,0
+0032  0820  movf   0x20,W          ; movf    DATO,W
+0033  3A3F  xorlw  0x3F            ; xorlw   '?'
+0034  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+0035  2859  goto   0x059           ; goto    INFORMAR
+0036  0820  movf   0x20,W          ; movf    DATO,W
+0037  39DF  andlw  0xDF            ; andlw   0xDF
+0038  3A41  xorlw  0x41            ; xorlw   'A'
+0039  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+003A  2855  goto   0x055           ; goto    TODOS
+003B  0820  movf   0x20,W          ; movf    DATO,W
+003C  39DF  andlw  0xDF            ; andlw   0xDF
+003D  3A42  xorlw  0x42            ; xorlw   'B'
+003E  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+003F  2858  goto   0x058           ; goto    NINGUNO
+0040  3031  movlw  0x31            ; movlw   '1'
+0041  0220  subwf  0x20,W          ; subwf   DATO,W
+0042  1C03  btfss  STATUS,0        ; btfss   STATUS,C
+0043  282B  goto   0x02B           ; goto    LAZO
+0044  00A3  movwf  0x23            ; movwf   AUX
+0045  3008  movlw  0x08            ; movlw   8
+0046  0223  subwf  0x23,W          ; subwf   AUX,W
+0047  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0048  282B  goto   0x02B           ; goto    LAZO
+0049  3001  movlw  0x01            ; movlw   1
+004A  00A2  movwf  0x22            ; movwf   MASCARA
+004B  08A3  movf   0x23,F          ; movf    AUX,F
+004C  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+004D  2852  goto   0x052           ; goto    INVERTIR
+004E  1003  bcf    STATUS,0        ; bcf     STATUS,C
+004F  0DA2  rlf    0x22,F          ; rlf     MASCARA,F
+0050  03A3  decf   0x23,F          ; decf    AUX,F
+0051  284B  goto   0x04B           ; goto    DESPL
+0052  0822  movf   0x22,W          ; movf    MASCARA,W
+0053  0686  xorwf  PORTB,F         ; xorwf   PORTB,F
+0054  2859  goto   0x059           ; goto    INFORMAR
+0055  30FF  movlw  0xFF            ; movlw   0xFF
+0056  0086  movwf  PORTB           ; movwf   PORTB
+0057  2859  goto   0x059           ; goto    INFORMAR
+0058  0186  clrf   PORTB           ; clrf    PORTB
+0059  3000  movlw  0x00            ; movlw   HIGH TXT_LEDS
+005A  00EC  movwf  0x6C            ; movwf   PTR_H
+005B  30C0  movlw  0xC0            ; movlw   LOW TXT_LEDS
+005C  00ED  movwf  0x6D            ; movwf   PTR_L
+005D  20DB  call   0x0DB           ; call    TX_CADENA
+005E  0806  movf   PORTB,W         ; movf    PORTB,W
+005F  00A3  movwf  0x23            ; movwf   AUX
+0060  3008  movlw  0x08            ; movlw   8
+0061  00A4  movwf  0x24            ; movwf   I
+0062  0DA3  rlf    0x23,F          ; rlf     AUX,F
+0063  3030  movlw  0x30            ; movlw   '0'
+0064  1803  btfsc  STATUS,0        ; btfsc   STATUS,C
+0065  3031  movlw  0x31            ; movlw   '1'
+0066  20D7  call   0x0D7           ; call    TX_BYTE
+0067  0BA4  decfsz 0x24,F          ; decfsz  I,F
+0068  2862  goto   0x062           ; goto    INF1
+0069  20E6  call   0x0E6           ; call    TX_CRLF
+006A  282B  goto   0x02B           ; goto    LAZO
+006B  3450  retlw  0x50            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+006C  3449  retlw  0x49            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+006D  3443  retlw  0x43            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+006E  3431  retlw  0x31            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+006F  3436  retlw  0x36            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0070  3446  retlw  0x46            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0071  3438  retlw  0x38            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0072  3437  retlw  0x37            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0073  3437  retlw  0x37            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0074  3441  retlw  0x41            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0075  3420  retlw  0x20            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0076  342D  retlw  0x2D            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0077  3420  retlw  0x20            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0078  3455  retlw  0x55            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0079  3453  retlw  0x53            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+007A  3441  retlw  0x41            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+007B  3452  retlw  0x52            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+007C  3454  retlw  0x54            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+007D  3420  retlw  0x20            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+007E  3439  retlw  0x39            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+007F  3436  retlw  0x36            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0080  3430  retlw  0x30            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0081  3430  retlw  0x30            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0082  3420  retlw  0x20            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0083  3438  retlw  0x38            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0084  344E  retlw  0x4E            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0085  3431  retlw  0x31            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0086  340D  retlw  0x0D            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0087  340A  retlw  0x0A            ; DT     "PIC16F877A - USART 9600 8N1",13,10
+0088  3431  retlw  0x31            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0089  342D  retlw  0x2D            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+008A  3438  retlw  0x38            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+008B  343A  retlw  0x3A            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+008C  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+008D  3469  retlw  0x69            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+008E  346E  retlw  0x6E            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+008F  3476  retlw  0x76            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0090  3469  retlw  0x69            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0091  3465  retlw  0x65            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0092  3472  retlw  0x72            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0093  3474  retlw  0x74            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0094  3465  retlw  0x65            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0095  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0096  3475  retlw  0x75            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0097  346E  retlw  0x6E            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0098  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+0099  344C  retlw  0x4C            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+009A  3445  retlw  0x45            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+009B  3444  retlw  0x44            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+009C  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+009D  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+009E  3441  retlw  0x41            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+009F  343A  retlw  0x3A            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A0  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A1  3474  retlw  0x74            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A2  346F  retlw  0x6F            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A3  3464  retlw  0x64            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A4  346F  retlw  0x6F            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A5  3473  retlw  0x73            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A6  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A7  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A8  3442  retlw  0x42            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00A9  343A  retlw  0x3A            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00AA  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00AB  346E  retlw  0x6E            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00AC  3469  retlw  0x69            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00AD  346E  retlw  0x6E            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00AE  3467  retlw  0x67            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00AF  3475  retlw  0x75            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B0  346E  retlw  0x6E            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B1  346F  retlw  0x6F            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B2  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B3  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B4  343F  retlw  0x3F            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B5  343A  retlw  0x3A            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B6  3420  retlw  0x20            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B7  3465  retlw  0x65            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B8  3473  retlw  0x73            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00B9  3474  retlw  0x74            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00BA  3461  retlw  0x61            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00BB  3464  retlw  0x64            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00BC  346F  retlw  0x6F            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00BD  340D  retlw  0x0D            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00BE  340A  retlw  0x0A            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00BF  3400  retlw  0x00            ; DT     "1-8: invierte un LED  A: todos  B: ninguno  ?: estado",13,10,0
+00C0  344C  retlw  0x4C            ; DT     "LEDS = ",0
+00C1  3445  retlw  0x45            ; DT     "LEDS = ",0
+00C2  3444  retlw  0x44            ; DT     "LEDS = ",0
+00C3  3453  retlw  0x53            ; DT     "LEDS = ",0
+00C4  3420  retlw  0x20            ; DT     "LEDS = ",0
+00C5  343D  retlw  0x3D            ; DT     "LEDS = ",0
+00C6  3420  retlw  0x20            ; DT     "LEDS = ",0
+00C7  3400  retlw  0x00            ; DT     "LEDS = ",0
+00C8  086C  movf   0x6C,W          ; movf    PTR_H,W
+00C9  008A  movwf  PCLATH          ; movwf   PCLATH
+00CA  086D  movf   0x6D,W          ; movf    PTR_L,W
+00CB  0082  movwf  PCL             ; movwf   PCL
+00CC  1683  bsf    STATUS,5        ; BANKSEL SPBRG
+00CD  1303  bcf    STATUS,6        ; BANKSEL SPBRG
+00CE  3019  movlw  0x19            ; movlw   25
+00CF  0099  movwf  TXREG           ; movwf   SPBRG
+00D0  3024  movlw  0x24            ; movlw   b'00100100'
+00D1  0098  movwf  RCSTA           ; movwf   TXSTA
+00D2  1283  bcf    STATUS,5        ; BANKSEL RCSTA
+00D3  1303  bcf    STATUS,6        ; BANKSEL RCSTA
+00D4  3090  movlw  0x90            ; movlw   b'10010000'
+00D5  0098  movwf  RCSTA           ; movwf   RCSTA
+00D6  0008  return                 ; return
+00D7  1E0C  btfss  PIR1,4          ; btfss   PIR1,TXIF
+00D8  28D7  goto   0x0D7           ; goto    TX_BYTE
+00D9  0099  movwf  TXREG           ; movwf   TXREG
+00DA  0008  return                 ; return
+00DB  20C8  call   0x0C8           ; call    LEER_TABLA
+00DC  3800  iorlw  0x00            ; iorlw   0
+00DD  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00DE  0008  return                 ; return
+00DF  20D7  call   0x0D7           ; call    TX_BYTE
+00E0  0AED  incf   0x6D,F          ; incf    PTR_L,F
+00E1  1903  btfsc  STATUS,2        ; btfsc   STATUS,Z
+00E2  0AEC  incf   0x6C,F          ; incf    PTR_H,F
+00E3  28DB  goto   0x0DB           ; goto    TX_CADENA
+00E4  3E30  addlw  0x30            ; addlw   '0'
+00E5  28D7  goto   0x0D7           ; goto    TX_BYTE
+00E6  300D  movlw  0x0D            ; movlw   13
+00E7  20D7  call   0x0D7           ; call    TX_BYTE
+00E8  300A  movlw  0x0A            ; movlw   10
+00E9  28D7  goto   0x0D7           ; goto    TX_BYTE
